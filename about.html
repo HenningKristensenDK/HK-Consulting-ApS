@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Om Henning Kristensen — freelance projektleder og ingeniør med 25+ års erfaring inden for produktudvikling.">
+  <title>Om mig | Henning Kristensen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .about-full { padding: 96px 0; }
+
+    .about-full-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .about-sidebar { position: sticky; top: 100px; }
+
+    .about-photo {
+      width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #1e3a5f, #0f172a);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+      color: rgba(255,255,255,0.15);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .about-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 20px;
+    }
+
+    .about-quick-facts {
+      background: var(--bg-alt);
+      border-radius: var(--radius);
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .about-quick-facts h3 {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .fact-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9375rem;
+    }
+    .fact-item:last-child { border-bottom: none; }
+    .fact-label { color: var(--text-muted); }
+    .fact-value { font-weight: 600; color: var(--text); }
+
+    .about-main h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+      margin-top: 56px;
+    }
+    .about-main h2:first-child { margin-top: 0; }
+
+    .about-main p {
+      color: var(--text-muted);
+      font-size: 1.0625rem;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .skill-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--bg-alt);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .skill-item::before { content: '✓'; color: var(--accent); font-weight: 800; }
+
+    .achievement-list { list-style: none; margin-top: 24px; }
+
+    .achievement-list li {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .achievement-list li:last-child { border-bottom: none; }
+
+    .achievement-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+
+    .achievement-text strong {
+      display: block;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+      font-size: 1rem;
+    }
+    .achievement-text span { font-size: 0.9375rem; color: var(--text-muted); line-height: 1.6; }
+
+    .cta-band {
+      background: var(--primary);
+      padding: 80px 0;
+      text-align: center;
+    }
+    .cta-band h2 { color: white; font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700; margin-bottom: 16px; }
+    .cta-band p { color: rgba(255,255,255,0.6); font-size: 1.0625rem; margin-bottom: 40px; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+    @media (max-width: 900px) {
+      .about-full-grid { grid-template-columns: 1fr; gap: 48px; }
+      .about-sidebar { position: static; max-width: 380px; }
+      .skills-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav scrolled" id="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">HK<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about">Om mig</a></li>
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="portfolio.html">Portfolio</a></li>
+        <li><a href="http://henningkristensen.com/product-development-blog-henning-kristensen/" target="_blank" rel="noopener">Blog</a></li>
+        <li><a href="index.html#contact" class="nav-cta">Kontakt</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Åbn menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-hero">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="index.html">Hjem</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Om mig</span>
+      </nav>
+      <h1>Om mig</h1>
+      <p>Freelance Project Manager &amp; Engineer med 25+ års erfaring inden for produktudvikling.</p>
+    </div>
+  </div>
+
+  <section class="about-full">
+    <div class="container">
+      <div class="about-full-grid">
+
+        <aside class="about-sidebar">
+          <div class="about-photo">👤</div>
+          <div class="about-quick-facts">
+            <h3>Hurtigt overblik</h3>
+            <div class="fact-item">
+              <span class="fact-label">Erfaring</span>
+              <span class="fact-value">25+ år</span>
+            </div>
+            <div class="fact-item">
+              <span class="fact-label">Projektledelse</span>
+              <span class="fact-value">15 år</span>
+            </div>
+            <div class="fact-item">
+              <span class="fact-label">Store projekter</span>
+              <span class="fact-value">4</span>
+            </div>
+            <div class="fact-item">
+              <span class="fact-label">Mellemstore proj.</span>
+              <span class="fact-value">10+</span>
+            </div>
+            <div class="fact-item">
+              <span class="fact-label">Lokation</span>
+              <span class="fact-value">Vejle, DK</span>
+            </div>
+            <div class="fact-item">
+              <span class="fact-label">Sprog</span>
+              <span class="fact-value">DA / EN</span>
+            </div>
+          </div>
+        </aside>
+
+        <main class="about-main">
+          <h2>Baggrund &amp; Erfaring</h2>
+          <p>
+            Med mere end 25 års erfaring inden for produktudvikling og 15 år som projektleder har jeg opbygget en unik kombination af teknisk dybde og ledelsesmæssig styrke. Jeg har ledet fire meget store og mere end ti mellemstore udviklingsprojekter, og jeg leverer konsekvent resultater i overensstemmelse med specifikation, tidsplan og omkostningsbudget.
+          </p>
+          <p>
+            Min tværfaglige tekniske baggrund spænder over mekanik, elektronik, software, hardware og industrielt design — en kombination, der gør mig i stand til at bygge bro mellem discipliner og sikre kohærente løsninger på komplekse udfordringer.
+          </p>
+          <p>
+            Som freelance projektleder og ingeniør tilbyder jeg virksomheder fleksibiliteten ved en interim-tilknytning med fuldt kendte omkostninger — uden administration, forsikring, pension eller feriepenge. Det giver dig en erfaren ressource på præcis det niveau, du har brug for, præcis når du har brug for det.
+          </p>
+
+          <h2>Kompetencer</h2>
+          <div class="skills-grid">
+            <div class="skill-item">Mekanisk konstruktion</div>
+            <div class="skill-item">Elektronik / Hardware</div>
+            <div class="skill-item">Software / Firmware</div>
+            <div class="skill-item">Industrielt Design</div>
+            <div class="skill-item">Projektledelse</div>
+            <div class="skill-item">Stage-Gate processer</div>
+            <div class="skill-item">Produktstrategi</div>
+            <div class="skill-item">Coaching &amp; Kommunikation</div>
+          </div>
+
+          <h2>Karrierehøjdepunkter</h2>
+          <ul class="achievement-list">
+            <li>
+              <span class="achievement-icon">🏗️</span>
+              <div class="achievement-text">
+                <strong>Guldmanns største udviklingsprojekt nogensinde</strong>
+                <span>Ledte det hidtil største projekt i Guldmanns historie — et komplet, modulopbygget produktportfolio af loftlift- og skinnesystemer til løft og transport af handicappede.</span>
+              </div>
+            </li>
+            <li>
+              <span class="achievement-icon">⚡</span>
+              <div class="achievement-text">
+                <strong>Produktudvikling hos Grundfos</strong>
+                <span>Produktudviklingsprojekter hos en af verdens største pumpeproducenter med fokus på cirkulationspumper og tværfaglig ingeniørmæssig integration.</span>
+              </div>
+            </li>
+            <li>
+              <span class="achievement-icon">🏥</span>
+              <div class="achievement-text">
+                <strong>Medicoteknisk udstyr</strong>
+                <span>Udvikling af avancerede løsninger til løft og transport af handicappede — sikkerhed og brugeroplevelse i centrum, fra koncept til CE-godkendelse.</span>
+              </div>
+            </li>
+            <li>
+              <span class="achievement-icon">🏆</span>
+              <div class="achievement-text">
+                <strong>Verdensmester i drug-free fitness</strong>
+                <span>Danmarks mest succesfulde drug-free fitnessatlet med 1 verdensmesterskab og 4 danske mesterskaber — et bevis på den disciplin og det drive, jeg bringer til alt, jeg gør.</span>
+              </div>
+            </li>
+          </ul>
+        </main>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-band">
+    <div class="container">
+      <h2>Lad os arbejde sammen</h2>
+      <p>Kontakt mig for en uforpligtende snak om, hvordan min erfaring kan styrke dit næste projekt.</p>
+      <a href="index.html#contact" class="btn btn-primary">Tag kontakt →</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="index.html" class="footer-logo">HK<span>.</span></a>
+        <ul class="footer-links">
+          <li><a href="index.html#services">Services</a></li>
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="http://henningkristensen.com/product-development-blog-henning-kristensen/" target="_blank" rel="noopener">Blog</a></li>
+          <li><a href="index.html#contact">Kontakt</a></li>
+        </ul>
+        <p class="footer-copy">© 2025 Henning Kristensen</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
