@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portfolio — Henning Kristensen. Udvalgte produktudviklingsprojekter fra 25+ års karriere.">
+  <title>Portfolio | Henning Kristensen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .portfolio-full {
+      padding: 96px 0;
+      background: var(--bg-alt);
+    }
+
+    .pf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 32px;
+    }
+
+    .pf-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    .pf-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pf-card-header {
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .pf-card-header.navy  { background: linear-gradient(135deg, #1e3a5f, #0f172a); }
+    .pf-card-header.teal  { background: linear-gradient(135deg, #0f4c5c, #0a2a33); }
+    .pf-card-header.slate { background: linear-gradient(135deg, #2d3748, #1a202c); }
+    .pf-card-header.deep  { background: linear-gradient(135deg, #3b1f5e, #1a0a35); }
+
+    .pf-card-body { padding: 32px; }
+
+    .pf-category {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .pf-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .pf-desc {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
+
+    .pf-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .pf-tag {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      background: var(--bg-alt);
+      color: var(--text-muted);
+      padding: 5px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+    }
+
+    .cta-band {
+      padding: 80px 0;
+      background: var(--primary);
+      text-align: center;
+    }
+    .cta-band h2 { color: white; font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700; margin-bottom: 16px; }
+    .cta-band p { color: rgba(255,255,255,0.6); font-size: 1.0625rem; margin-bottom: 40px; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+    @media (max-width: 600px) {
+      .pf-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav scrolled" id="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">HK<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about">Om mig</a></li>
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="portfolio.html">Portfolio</a></li>
+        <li><a href="http://henningkristensen.com/product-development-blog-henning-kristensen/" target="_blank" rel="noopener">Blog</a></li>
+        <li><a href="index.html#contact" class="nav-cta">Kontakt</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Åbn menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-hero">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="index.html">Hjem</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Portfolio</span>
+      </nav>
+      <h1>Portfolio</h1>
+      <p>Udvalgte projekter fra 25+ år med produktudvikling og projektledelse.</p>
+    </div>
+  </div>
+
+  <section class="portfolio-full">
+    <div class="container">
+      <div class="pf-grid">
+
+        <div class="pf-card">
+          <div class="pf-card-header navy">🏗️</div>
+          <div class="pf-card-body">
+            <p class="pf-category">Medicoudstyr · Projektledelse</p>
+            <h3 class="pf-title">Guldmann — Loftlift &amp; Skinnesystemer</h3>
+            <p class="pf-desc">
+              Som projektleder stod jeg bag Guldmanns hidtil største udviklingsprojekt: et komplet, modulopbygget produktportfolio af loftlift- og skinnesystemer samt mobile hejseværktøjer til løft og transport af handicappede. Projektet dækkede mekanisk konstruktion, elektronik, software og CE-godkendelse fra start til lancering.
+            </p>
+            <div class="pf-meta">
+              <span class="pf-tag">Projektledelse</span>
+              <span class="pf-tag">Mekanik</span>
+              <span class="pf-tag">Moduldesign</span>
+              <span class="pf-tag">CE-godkendelse</span>
+              <span class="pf-tag">Medicoudstyr</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-card">
+          <div class="pf-card-header teal">⚡</div>
+          <div class="pf-card-body">
+            <p class="pf-category">Industri · Engineering</p>
+            <h3 class="pf-title">Grundfos — Cirkulationspumper</h3>
+            <p class="pf-desc">
+              Produktudvikling for Grundfos, en af verdens største pumpeproducenter. Arbejdet dækkede tværfaglig produktudvikling med mekanik, elektronik og softwareintegration inden for cirkulationspumper til bygningsinstallationer.
+            </p>
+            <div class="pf-meta">
+              <span class="pf-tag">Pumper</span>
+              <span class="pf-tag">Mekanik</span>
+              <span class="pf-tag">Elektronik</span>
+              <span class="pf-tag">Software</span>
+              <span class="pf-tag">Produktudvikling</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-card">
+          <div class="pf-card-header slate">🏥</div>
+          <div class="pf-card-body">
+            <p class="pf-category">Medicoudstyr · Hardware / Software</p>
+            <h3 class="pf-title">Medicinsk udstyr til løft &amp; transfer</h3>
+            <p class="pf-desc">
+              Udvikling af avanceret medicinsk udstyr til løft og flytning af handicappede — med fokus på sikkerhed, brugervenlighed og robust mekanisk og elektronisk design. Projektet involverede tæt samarbejde med klinikere og ergoterapeuter for at opnå det bedst mulige resultat.
+            </p>
+            <div class="pf-meta">
+              <span class="pf-tag">Medicinsk udstyr</span>
+              <span class="pf-tag">Hardware</span>
+              <span class="pf-tag">Sikkerhed</span>
+              <span class="pf-tag">UX / Ergonomi</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-card">
+          <div class="pf-card-header deep">🔬</div>
+          <div class="pf-card-body">
+            <p class="pf-category">R&amp;D · Projektledelse</p>
+            <h3 class="pf-title">Større R&amp;D projektportefølje</h3>
+            <p class="pf-desc">
+              Ud over de nævnte projekter har jeg ledet mere end ti mellemstore udviklingsprojekter inden for industrielle produkter, automation og embedded systems — altid med fokus på at levere til tid, budget og specifikation.
+            </p>
+            <div class="pf-meta">
+              <span class="pf-tag">R&amp;D</span>
+              <span class="pf-tag">Automation</span>
+              <span class="pf-tag">Embedded Systems</span>
+              <span class="pf-tag">Industrielt</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-band">
+    <div class="container">
+      <h2>Vil du vide mere om et projekt?</h2>
+      <p>Kontakt mig for en snak om, hvordan min erfaring kan gavne dit næste projekt.</p>
+      <a href="index.html#contact" class="btn btn-primary">Tag kontakt →</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="index.html" class="footer-logo">HK<span>.</span></a>
+        <ul class="footer-links">
+          <li><a href="about.html">Om mig</a></li>
+          <li><a href="index.html#services">Services</a></li>
+          <li><a href="http://henningkristensen.com/product-development-blog-henning-kristensen/" target="_blank" rel="noopener">Blog</a></li>
+          <li><a href="index.html#contact">Kontakt</a></li>
+        </ul>
+        <p class="footer-copy">© 2025 Henning Kristensen</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
