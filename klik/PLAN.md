@@ -1,7 +1,14 @@
 # Klik: plan for en enkel Snagit-erstatning
 
-Status: **planlagt**. Intet er bygget. "Klik" er et arbejdsnavn.
+Status: Fase 0+1 **prototypet** (kode skrevet, editoren testet i browser, ikke testet på Windows endnu). Resten er planlagt. "Klik" er et arbejdsnavn.
 Dato: 2026.11.13
+
+## Beslutninger (Henning, 2026.11.13)
+
+- Editoren åbner **automatisk** efter capture, direkte oven på den frosne skærm. Marker er valgt fra start, så man kan markere med det samme.
+- **Esc = gem.** Billedet med alle markeringer gemmes og ligger på udklipsholderen, klar til at sætte ind.
+- Værktøjer: **pil med nummer**, **frihånd**, **linje**, **marker**.
+- Idé B (step-guide + Claude-tekst) er godkendt og udvides til et **demo-studie**: tal hen over optagelsen, webcam i en cirkel, alt i samme værktøj.
 
 ## 1. Mål og læser
 
@@ -40,8 +47,8 @@ Kilde: TechSmiths egen featureside og "What's new" (primærkilder). Snagit er nu
 ## 4. MVP-scope
 
 Med:
-1. **Screenshot:** genvejstast → træk område (eller klik på vindue) → på udklipsholder + gemt som PNG.
-2. **Mini-editor med 4 værktøjer:** nummer (1, 2, 3 … auto-tæller), pil, firkant, blur. Ét klik pr. markering. Ingen menuer.
+1. **Screenshot:** genvejstast → træk område (eller klik = hele skærmen) → editor åbner automatisk → Esc → på udklipsholder + gemt som PNG.
+2. **Mini-editor med 4 værktøjer:** marker (standard), pil med nummer (1, 2, 3 … tæller selv), frihånd, linje. 5 farver. Ét træk pr. markering. Ingen menuer.
 3. **Step-optagelse:** start → hvert museklik giver et screenshot med en rød ring om klikpunktet → stop → én samlet guide (lang PNG + Word/Markdown med nummererede trin).
 4. **Video:** genvejstast → vælg område → optag med gul cursor-ring og klik-ripple → stop → MP4.
 5. **Scrolling capture:** genvejstast → klik i vinduet → Klik scroller selv og syr billedet sammen.
@@ -53,7 +60,7 @@ Ude af MVP: webcam, GIF, cloud-deling, OCR, Smart Redact, skabeloner, Mac.
 | Opgave | Klik-flow | Mål |
 |---|---|---|
 | Område-screenshot ind i Teams | `PrtScn` → træk → `Ctrl+V` i Teams | 1 tast + 1 træk |
-| Screenshot med trin 1–3 | `PrtScn` → træk → `E` → 3 klik → `Ctrl+C` | 1 træk + 3 klik |
+| Screenshot med trin 1–3 | `PrtScn` → træk → `A` → 3 træk → `Esc` | 1 træk + 3 træk |
 | Step-guide over 10 klik | `Ctrl+Shift+T` → dine 10 klik → `Ctrl+Shift+T` | 0 ekstra klik |
 | Video med gul cursor | `Ctrl+Shift+R` → træk → … → `Ctrl+Shift+R` | 1 træk |
 | Lang side | `Ctrl+Shift+S` → klik i vinduet | 1 klik |
@@ -83,12 +90,13 @@ Tidsestimater er grove skøn, ikke tilbud.
 
 | Fase | Indhold | Skøn | Bevis for færdig |
 |---|---|---|---|
-| 0. Spike | Tauri-app der tager et screenshot via WGC, fanger et globalt klik og viser den gule ring | 2–3 dage | Kører på din PC |
-| 1. Screenshot + mini-editor | Område/vindue, clipboard, 4 værktøjer, auto-gem | 1 uge | 5-opgave-test opgave 1–2 |
+| 0. Spike | Tauri-app, genvejstast, capture af skærmen under musen, ikonbakke | 2–3 dage | Kører på din PC. **Status: kode skrevet** |
+| 1. Screenshot + mini-editor | Område/hele skærm, editor åbner selv, 4 værktøjer, Esc = gem + udklipsholder | 1 uge | 5-opgave-test opgave 1–2. **Status: testet i browser, mangler Windows-test** |
 | 2. Step-optagelse | Klik-hook, rød ring, samlet guide, Word/Markdown-eksport | 1 uge | 10 klik → guide klar < 2 sek efter stop |
-| 3. Video | MP4 med lyd, gul ring, klik-ripple | 1–1,5 uge | MP4 afspilles i Teams og PowerPoint |
+| 3. Video | MP4 med mikrofon, gul ring, klik-ripple, webcam i cirkel | 1,5–2 uger | MP4 afspilles i Teams og PowerPoint |
 | 4. Scrolling capture | Auto-scroll + sammensyning, manuel fallback | 1–2 uger | Lang side fra Chrome, Outlook og SharePoint uden synlige sømme |
-| 5. Senere | AI-skrevne step-tekster (Claude), OCR, blur af e-mails/CPR automatisk | – | – |
+| 5. Demo-studie | Step-optagelse + tale + webcam → Claude skriver trin-tekst ud fra klik og det, du siger → guide (Word/PowerPoint) og demo-video | 2–3 uger | En 10-trins guide klar til kunden uden manuel tekst |
+| 6. Senere | OCR, automatisk blur af e-mails/CPR | – | – |
 
 Rækkefølgen er valgt efter værdi og risiko: step-optagelse er det, gratis værktøjer ikke har; scroll er sidst, fordi den er mest usikker.
 
