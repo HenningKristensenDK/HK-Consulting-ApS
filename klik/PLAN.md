@@ -97,9 +97,12 @@ Tidsestimater er grove skøn, ikke tilbud.
 | 3. Video | MP4 med mikrofon, gul ring, klik-ripple, webcam i cirkel | 1,5–2 uger | MP4 afspilles i Teams og PowerPoint |
 | 4. Scrolling capture | Auto-scroll + sammensyning, manuel fallback | 1–2 uger | Lang side fra Chrome, Outlook og SharePoint uden synlige sømme |
 | 5. Demo-studie | Step-optagelse + tale + webcam → Claude skriver trin-tekst ud fra klik og det, du siger → guide (Word/PowerPoint) og demo-video | 2–3 uger | En 10-trins guide klar til kunden uden manuel tekst |
+| 5b. LinkedIn-opslag fra optagelse | Hændelseslog (`events.json`) under optagelse → lokal tale-til-tekst → Claude laver redigeringsplan (klip, zoom på klik, undertekster, hook) → FFmpeg renderer 4:5, 9:16 og 16:9 med RTPM-skabeloner → karrusel-PDF fra step-billeder. Valgfri AI-stemme (kun Hennings egen, mærket som AI). Senere: genafspil en gemt klik-sti på en ny build (SPEC F15) | 3–4 uger | En 2-minutters rå optagelse bliver til en 4:5-video med undertekster, hook og slutkort efter ét tryk og lette rettelser |
 | 6. Senere | OCR, automatisk blur af e-mails/CPR | – | – |
 
 Rækkefølgen er valgt efter værdi og risiko: step-optagelse er det, gratis værktøjer ikke har; scroll er sidst, fordi den er mest usikker.
+
+Fase 5b bygger på fase 2, 3 og 5 og starter først, når video virker på Windows. Rækkefølge inden for 5b: (1) hændelseslog, (2) automatisk zoom, fjern pauser og 4:5-eksport uden AI, (3) lokal tale-til-tekst og Claudes redigeringsplan, (4) RTPM-skabeloner og karrusel, (5) AI-stemme, (6) genafspilning af klik-sti. Hvert trin er brugbart alene.
 
 ## 7. Pass/fail-test (5 opgaver)
 

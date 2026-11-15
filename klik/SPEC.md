@@ -176,6 +176,37 @@ The problem: a result from one AI session (chat, Project, Claude Code) is copied
 | Claude Code on the PC | Yes. `claude mcp add` |
 | claude.ai in a browser, the phone app, Claude Code in the cloud | No, they cannot reach the PC. Possible bridge (Could, not tested): keep the inbox in a OneDrive or Google Drive folder and read it with the existing Microsoft 365 or Google Drive connectors. A remote MCP server in RTPM's own cloud is a later option, but then data leaves the PC. |
 
+### F15. LinkedIn posts from a recording: Could, Planned
+
+Klik turns one rough demo recording (F6, F7, F8) into finished LinkedIn content, so a new build can be shown the same day without a separate video or design tool. This is part of Klik, not a separate app.
+
+**Flow:** record as usual → press "Lav opslag" (make post) → review the AI's edit plan → export.
+
+1. **Event log while recording.** F6 and F7 also save `events.json`: every click and key with timestamp, screen position and, where Windows UI Automation gives it, the button or field name. This lets Claude understand the recording without watching all of it.
+2. **Local transcript.** Speech from F8 is turned into text with timestamps on the PC (for example whisper.cpp). No audio leaves the PC for this step.
+3. **AI edit plan.** Only when the user presses "Lav opslag", Claude reads `events.json`, the transcript and a few keyframes and returns `edit.json`: cuts (pauses, mistakes), zoom-ins on clicks, captions, a hook line and a short storyboard. The user reviews it in a simple timeline. The original recording is never changed.
+4. **Voice (optional).** Keep Henning's own cleaned-up voice, or let a cloned voice read the approved script. Only Henning's own voice, with his recorded consent, and the post says the voice is AI-generated.
+5. **Render.** A bundled FFmpeg sidecar renders the edit plan with brand overlays: hook card, burned-in captions, lower third and end card.
+6. **Images and documents.** Step screenshots (F6) become a 4:5 PDF carousel or a single framework image, using the RTPM LinkedIn content kit layouts.
+7. **(Later) Replayable demos.** A saved click path is replayed on a new build and recorded again, so a demo is updated without re-recording by hand.
+
+**Outputs**
+
+| Output | Size | Use |
+|---|---|---|
+| Feed video | 1080 × 1350 (4:5), MP4 | Default LinkedIn video |
+| Vertical video | 1080 × 1920 (9:16), MP4 | Short clips for the vertical feed |
+| Wide video | 1920 × 1080 (16:9), MP4 | Website, YouTube, presentations. A separate layout, never a crop of 4:5 |
+| Carousel | 1080 × 1350 per page, PDF | LinkedIn document post |
+| Framework image | 1080 × 1350, PNG | Single-image post |
+| Storyboard | Markdown or PowerPoint | Plan a video before recording |
+
+**Brand.** Templates read colours, fonts and logo rules from the `rtpm-brand-system` repo (`brand-tokens.json`), which wins if anything disagrees. Phone floors on a 1080 px canvas: headline 96 px, body 36 px, any label or caption 30 px. On Henning's personal posts RTPM is not named and no RTPM logo is used. Numbers come only from the approved proof library; a missing figure stays a `[placeholder]`. Sample data in a demo is labelled as sample data.
+
+**Privacy.** Same rule as F9: AI and voice services are used only when the user presses the button for that recording. Recordings of client systems are sent only with the client's permission. Everything else stays in `Videos\Klik\`.
+
+- **Accept when:** a 2-minute rough recording becomes a captioned 4:5 MP4 with hook and end card after one press of "Lav opslag" and light edits only, and the same recording's step screenshots export as a 4:5 PDF carousel that passes the brand phone floors.
+
 ## 4. Click budget
 
 These targets are the pass/fail test. Henning does each task in Snagit and in Klik. Klik passes when every task needs fewer clicks than Snagit and no task shows a dialog.
@@ -194,7 +225,7 @@ These targets are the pass/fail test. Henning does each task in Snagit and in Kl
 - **Speed (targets, not yet measured):** editor visible in under 0.3 seconds after the hotkey, and Esc to clipboard in under 0.5 seconds on a 4K monitor.
 - **Screens:** several monitors with different scaling must work. The capture follows the mouse.
 - **Storage:** `Pictures\Klik\`, with file names `Klik YYYY-MM-DD HHMMSS.png`.
-- **Privacy:** no telemetry. No network calls except F9, and only when the user starts it.
+- **Privacy:** no telemetry. No network calls except F9 and F15, and only when the user starts them.
 - **Language:** Danish user interface in v1. Whether English comes later is open (Q4).
 - **Install:** no admin rights needed.
 
@@ -216,6 +247,7 @@ Klik copies Snagit's ideas, not its code or look. It is built from public descri
 | Q4 | Danish only, or Danish and English? | Needed for the store, and for clients outside Denmark |
 | Q5 | Whose Claude account pays for F9, and where do client guides get stored (local folder, SharePoint)? | Cost and client data rules |
 | Q6 | Do most of Henning's AI sessions run in Claude Desktop and Claude Code on the PC, or in the browser and on the phone? | F13 and F14 only work locally without the Drive bridge |
+| Q7 | F15: which voice-cloning and AI service, and who pays? Is AI voice used at all on client-facing demos? | Cost, consent and how the AI voice is labelled |
 
 ## 9. Source of these wishes
 
