@@ -5,12 +5,13 @@ import { Icon } from "./icons";
 
 type Mode = "idle" | "select" | "edit";
 
-const COLORS = ["#EF4444", "#FFE14D", "#22C55E", "#3B82F6", "#111827"];
+// RTPM brand: RAG red/green, Primary Indigo, Accent Yellow (highlighter), Ink.
+const COLORS = ["#C0392B", "#0d08d2", "#27AE60", "#ffcc00", "#15162b"];
 const DEFAULT_COLORS: Record<Tool, string> = {
-  highlight: "#FFE14D",
-  pen: "#EF4444",
-  line: "#EF4444",
-  arrow: "#EF4444",
+  highlight: "#ffcc00",
+  pen: "#C0392B",
+  line: "#C0392B",
+  arrow: "#0d08d2",
 };
 const TOOLS: { id: Tool; key: string; label: string }[] = [
   { id: "highlight", key: "M", label: "Marker" },

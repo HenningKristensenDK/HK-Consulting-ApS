@@ -1,6 +1,6 @@
 # Klik: product specification
 
-Version 0.4, 2026.11.15. Owner: Henning Kristensen (RTPM).
+Version 0.5, 2026.11.15. Owner: Henning Kristensen (RTPM).
 "Klik" is a working name.
 
 This spec records Henning's wishes for a simple screen capture tool that covers the most-used Snagit features with far fewer clicks. Each requirement says where it stands: **Built** (code exists and was tested in a browser, not yet on Windows), **Planned**, or **Open** (a decision is still needed). How the tool gets built is in `PLAN.md`.
@@ -27,6 +27,18 @@ Snagit can do a lot, but it has too many buttons and too many clicks per task. K
 5. **Looks calm and modern.** One dark, glass-style toolbar that appears next to the selection. A single accent colour.
 6. **Local by default.** Files stay on the PC. Nothing goes to the cloud or to AI unless the user asks for it in that capture.
 7. **A standalone app.** Klik is installed on the PC and runs on its own. It needs no browser, browser extension or other program to be open. (Its window is drawn with WebView2, a component built into Windows 11, not a browser you run.)
+
+### Brand
+
+Klik follows the RTPM product UI rules in `038-KNW-Universal brand color font and logo system` v1.0, sections 6-7. That file is the source. Do not copy its values elsewhere without checking it first.
+
+- Font: Inter only (bundled with the app).
+- Calm and light: white toolbar and hint, border `#e6e6f0`, text `#15162b`.
+- Active tool: Primary Indigo `#0d08d2`. One primary action per screen: "Kopiér" in Accent Yellow `#ffcc00`.
+- Marking colours: red `#C0392B`, indigo `#0d08d2`, green `#27AE60`, yellow `#ffcc00` (highlighter), ink `#15162b`. Numbered arrows default to indigo, pen and line to red.
+- App icon: Ink Navy `#070474` with an indigo glow upper-right, white selection corners and one yellow spotlight dot. Klik's own icon, not the RTPM mark, so the logo rules for the RTPM mark do not apply.
+- Sentence case in all UI text.
+- Installer publisher: Real Time Project Management.
 
 ## 3. Functional requirements
 

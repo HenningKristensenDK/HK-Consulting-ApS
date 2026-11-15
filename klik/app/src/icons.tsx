@@ -2,7 +2,7 @@ const P: Record<string, React.ReactNode> = {
   highlight: (
     <>
       <path d="M14.5 4.5l5 5L11 18H6v-5z" />
-      <path d="M4 21h16" strokeWidth="3" stroke="#FFE14D" />
+      <path d="M4 21h16" strokeWidth="3" stroke="#ffcc00" />
     </>
   ),
   arrow: (

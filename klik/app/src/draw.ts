@@ -51,7 +51,7 @@ function badge(ctx: CanvasRenderingContext2D, p: Pt, n: number, color: string, s
   ctx.strokeStyle = "#fff";
   ctx.stroke();
   ctx.fillStyle = "#fff";
-  ctx.font = `700 ${SIZE.font * s}px "Segoe UI", system-ui, sans-serif`;
+  ctx.font = `700 ${SIZE.font * s}px "Inter", "Segoe UI", system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(String(n), p.x, p.y + 0.5 * s);
@@ -133,7 +133,7 @@ export function render(
   ctx.drawImage(img, 0, 0);
 
   ctx.save();
-  ctx.fillStyle = "rgba(10, 12, 20, 0.45)";
+  ctx.fillStyle = "rgba(7, 4, 116, 0.42)"; // Ink Navy
   ctx.beginPath();
   ctx.rect(0, 0, W, H);
   if (sel) ctx.rect(sel.x, sel.y, sel.w, sel.h);
