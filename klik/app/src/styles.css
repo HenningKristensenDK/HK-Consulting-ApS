@@ -69,6 +69,13 @@ html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #000;
 .swatch:hover { transform: scale(1.15); }
 .swatch.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--indigo); }
 .sep { width: 1px; height: 24px; background: var(--border); margin: 0 6px; }
+.status {
+  display: flex; align-items: center; gap: 4px; min-width: 92px; justify-content: flex-end;
+  font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 6px;
+}
+.status svg { width: 16px; height: 16px; }
+.status.saved { color: #27AE60; }
+.status.error { color: #C0392B; }
 .done {
   display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 10px 0 12px; margin-left: 4px;
   border-radius: var(--radius-btn); background: var(--yellow) !important; color: var(--text) !important;

@@ -36,12 +36,15 @@ export const hotkeyLabel = (): Promise<string | null> =>
   inTauri ? invoke<string | null>("hotkey_label") : Promise.resolve("Ctrl+Alt+K");
 
 export const showOverlay = () => (inTauri ? invoke("show_overlay") : Promise.resolve());
-export const cancel = () => (inTauri ? invoke("cancel") : Promise.resolve());
+/** Hide the overlay. `discard` deletes the file saved for this capture. */
+export const close = (discard: boolean) => (inTauri ? invoke("close", { discard }) : Promise.resolve());
 
-/** Save + clipboard. Returns the saved path. */
-export async function finish(png: Uint8Array): Promise<string> {
-  if (inTauri) return invoke<string>("finish", png);
-  (window as unknown as { __lastPng?: Uint8Array }).__lastPng = png;
+/** Copy to the clipboard and save to Pictures\Klik. `rgba` = width, height (u32 LE) + RGBA pixels. */
+export async function saveCopy(rgba: Uint8Array): Promise<string> {
+  if (inTauri) return invoke<string>("save_copy", rgba);
+  const w = window as unknown as { __lastPng?: Uint8Array; __saves?: number };
+  w.__lastPng = rgba;
+  w.__saves = (w.__saves ?? 0) + 1;
   return "demo.png";
 }
 

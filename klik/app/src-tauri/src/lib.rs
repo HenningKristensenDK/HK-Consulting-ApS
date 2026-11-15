@@ -1,9 +1,9 @@
 //! Klik: capture core.
 //!
 //! Flow: hotkey -> capture the monitor under the cursor -> the overlay window
-//! covers that monitor and shows the frozen image -> user selects and draws ->
-//! Esc sends the finished PNG back here -> saved to Pictures\Klik and put on
-//! the clipboard.
+//! covers that monitor and shows the frozen image -> the user selects an area,
+//! which is saved to Pictures\Klik and put on the clipboard at once -> every
+//! marking updates both -> Esc closes.
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -20,6 +20,10 @@ const OVERLAY: &str = "overlay";
 /// The last captured monitor image: (width, height, RGBA bytes).
 #[derive(Default)]
 struct Shot(Mutex<Option<(u32, u32, Vec<u8>)>>);
+
+/// The file saved for the capture on screen, overwritten on every change.
+#[derive(Default)]
+struct CurrentFile(Mutex<Option<PathBuf>>);
 
 /// The hotkey Klik got, shown in the tray menu and the overlay hint.
 #[derive(Default)]
@@ -61,6 +65,7 @@ fn capture(app: &AppHandle) -> Result<(), String> {
     let (x, y) = (mon.x().map_err(err)?, mon.y().map_err(err)?);
 
     *app.state::<Shot>().0.lock().unwrap() = Some((w, h, img.into_raw()));
+    app.state::<CurrentFile>().0.lock().unwrap().take();
 
     win.set_position(PhysicalPosition::new(x, y)).map_err(err)?;
     win.set_size(PhysicalSize::new(w, h)).map_err(err)?;
@@ -112,44 +117,74 @@ fn show_overlay(window: WebviewWindow) -> Result<(), String> {
     Ok(())
 }
 
-#[tauri::command]
-fn cancel(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
-    window.hide().map_err(err)?;
-    app.state::<Shot>().0.lock().unwrap().take();
-    Ok(())
-}
-
 fn output_dir(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app.path().picture_dir().map_err(err)?.join("Klik");
     std::fs::create_dir_all(&dir).map_err(err)?;
     Ok(dir)
 }
 
-/// Receives the finished PNG (raw body), saves it and copies it to the clipboard.
-/// Returns the saved file path.
-#[tauri::command]
-fn finish(app: AppHandle, window: WebviewWindow, request: Request<'_>) -> Result<String, String> {
-    window.hide().map_err(err)?;
-    app.state::<Shot>().0.lock().unwrap().take();
-
-    let InvokeBody::Raw(png) = request.body() else {
-        return Err("expected PNG bytes".into());
+/// Copies the current image to the clipboard, then saves it as PNG.
+/// Body: width, height (u32 LE) + RGBA pixels. Called as soon as an area is
+/// selected and again after every marking, so the clipboard always holds what
+/// you see. One capture keeps one file, overwritten on each change.
+/// Runs off the main thread so the overlay stays responsive.
+#[tauri::command(async)]
+fn save_copy(app: AppHandle, request: Request<'_>) -> Result<String, String> {
+    let InvokeBody::Raw(body) = request.body() else {
+        return Err("expected image bytes".into());
     };
+    if body.len() < 8 {
+        return Err("image too short".into());
+    }
+    let w = u32::from_le_bytes(body[0..4].try_into().unwrap());
+    let h = u32::from_le_bytes(body[4..8].try_into().unwrap());
+    let px = &body[8..];
+    if px.len() != (w as usize) * (h as usize) * 4 {
+        return Err("image size does not match".into());
+    }
 
-    let name = chrono::Local::now().format("Klik %Y-%m-%d %H%M%S.png").to_string();
-    let path = output_dir(&app)?.join(name);
-    std::fs::write(&path, png).map_err(err)?;
+    let state = app.state::<CurrentFile>();
+    let mut current = state.0.lock().unwrap(); // also serialises saves
 
-    let rgba = image::load_from_memory(png).map_err(err)?.to_rgba8();
+    // Clipboard first: that is what the user pastes next.
     let mut cb = arboard::Clipboard::new().map_err(err)?;
     cb.set_image(arboard::ImageData {
-        width: rgba.width() as usize,
-        height: rgba.height() as usize,
-        bytes: rgba.into_raw().into(),
+        width: w as usize,
+        height: h as usize,
+        bytes: std::borrow::Cow::Borrowed(px),
     })
     .map_err(err)?;
 
+    let path = match current.as_ref() {
+        Some(p) => p.clone(),
+        None => {
+            let name = chrono::Local::now().format("Klik %Y-%m-%d %H%M%S.png").to_string();
+            let p = output_dir(&app)?.join(name);
+            *current = Some(p.clone());
+            p
+        }
+    };
+    let file = std::io::BufWriter::new(std::fs::File::create(&path).map_err(err)?);
+    let enc = image::codecs::png::PngEncoder::new_with_quality(
+        file,
+        image::codecs::png::CompressionType::Fast,
+        image::codecs::png::FilterType::Adaptive,
+    );
+    image::ImageEncoder::write_image(enc, px, w, h, image::ExtendedColorType::Rgba8).map_err(err)?;
     Ok(path.to_string_lossy().into_owned())
+}
+
+/// Hides the overlay. `discard` deletes the file saved for this capture.
+#[tauri::command]
+fn close(app: AppHandle, window: WebviewWindow, discard: bool) -> Result<(), String> {
+    window.hide().map_err(err)?;
+    app.state::<Shot>().0.lock().unwrap().take();
+    if let Some(p) = app.state::<CurrentFile>().0.lock().unwrap().take() {
+        if discard {
+            let _ = std::fs::remove_file(p);
+        }
+    }
+    Ok(())
 }
 
 /// The handoff inbox shared with Claude through klik-mcp (same default path).
@@ -241,11 +276,12 @@ pub fn run() {
         )
         .manage(Shot::default())
         .manage(Hotkey::default())
+        .manage(CurrentFile::default())
         .invoke_handler(tauri::generate_handler![
             get_shot,
             show_overlay,
-            cancel,
-            finish,
+            save_copy,
+            close,
             frontend_ready,
             hotkey_label
         ])

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
-import { cancel, finish, hotkeyLabel, inTauri, loadShot, onCaptured, showOverlay, type Shot } from "./bridge";
-import { exportPng, normRect, render, type Pt, type Rect, type Shape, type Tool } from "./draw";
+import { close, hotkeyLabel, inTauri, loadShot, onCaptured, saveCopy, showOverlay, type Shot } from "./bridge";
+import { exportRgba, normRect, render, type Pt, type Rect, type Shape, type Tool } from "./draw";
 import { Icon } from "./icons";
 
 type Mode = "idle" | "select" | "edit";
@@ -33,7 +33,12 @@ export function Overlay() {
     colors: { ...DEFAULT_COLORS },
     busy: false,
     toast: "",
+    /** Clipboard state shown in the toolbar. */
+    status: "" as "" | "saving" | "saved" | "error",
   });
+  const saveTimer = useRef<number | undefined>(undefined);
+  const saveSeq = useRef(0);
+  const saving = useRef<Promise<unknown>>(Promise.resolve());
   const [, rerender] = useReducer((x: number) => x + 1, 0);
   const hotkey = useRef<string | null>(null);
   const frame = useRef(0);
@@ -66,7 +71,7 @@ export function Overlay() {
         const c = canvasRef.current!;
         c.width = next.w;
         c.height = next.h;
-        Object.assign(st.current, { mode: "select", sel: null, shapes: [], draft: null, start: null, busy: false, toast: "" });
+        Object.assign(st.current, { mode: "select", sel: null, shapes: [], draft: null, start: null, busy: false, toast: "", status: "" });
         render(c.getContext("2d")!, next.bitmap, null, [], k());
         rerender();
         await showOverlay();
@@ -80,22 +85,57 @@ export function Overlay() {
     return { x: (e.clientX - r.left) * kk, y: (e.clientY - r.top) * kk };
   };
 
+  /** Save + copy what is on screen now. Only the newest save counts. */
+  const saveNow = useCallback(async () => {
+    window.clearTimeout(saveTimer.current);
+    saveTimer.current = undefined;
+    const s = st.current;
+    if (!s.sel || !shot.current) return;
+    const my = ++saveSeq.current;
+    const png = exportRgba(shot.current.bitmap, s.sel, s.shapes, k());
+    s.status = "saving";
+    rerender();
+    saving.current = saving.current
+      .then(() => saveCopy(png))
+      .then(
+        () => my === saveSeq.current && (s.status = "saved"),
+        () => (s.status = "error"),
+      )
+      .then(rerender);
+    await saving.current;
+  }, []);
+
+  /** Debounced: lets quick strokes in a row cost only one save. */
+  const scheduleSave = useCallback(
+    (delay = 150) => {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = window.setTimeout(saveNow, delay);
+    },
+    [saveNow],
+  );
+
+  /** Esc / Enter / Færdig: everything is already copied; make sure the last change is too, then close. */
   const done = useCallback(async () => {
     const s = st.current;
     if (s.busy || !s.sel || !shot.current) return;
     s.busy = true;
-    const png = await exportPng(shot.current.bitmap, s.sel, s.shapes, k());
+    if (saveTimer.current !== undefined) await saveNow();
+    await saving.current;
     s.mode = "idle";
     s.toast = "Gemt og kopieret";
     rerender();
-    await finish(png);
+    await close(false);
     s.busy = false;
-  }, []);
+  }, [saveNow]);
 
+  /** Kassér: close and delete the file saved for this capture. */
   const abort = useCallback(async () => {
+    window.clearTimeout(saveTimer.current);
+    saveSeq.current++;
+    await saving.current;
     st.current.mode = "idle";
     rerender();
-    await cancel();
+    await close(true);
   }, []);
 
   const backToSelect = () => {
@@ -152,9 +192,11 @@ export function Overlay() {
       s.sel = r.w < 6 * k() || r.h < 6 * k() ? { x: 0, y: 0, w: shot.current!.w, h: shot.current!.h } : r;
       s.start = null;
       s.mode = "edit";
+      scheduleSave(0); // the area is on the clipboard as soon as it is framed
     } else if (s.mode === "edit" && s.draft) {
       s.shapes = [...s.shapes, s.draft];
       s.draft = null;
+      scheduleSave();
     }
     paint();
     rerender();
@@ -172,6 +214,7 @@ export function Overlay() {
     st.current.shapes = st.current.shapes.slice(0, -1);
     paint();
     rerender();
+    scheduleSave();
   };
 
   useEffect(() => {
@@ -262,11 +305,20 @@ export function Overlay() {
           <button className="tool" title="Fortryd  (Ctrl+Z)" disabled={!s.shapes.length} onClick={undo}>
             <Icon name="undo" />
           </button>
-          <button className="tool" title="Kassér" onClick={abort}>
+          <button className="tool" title="Kassér: slet billedet og luk" onClick={abort}>
             <Icon name="close" />
           </button>
-          <button className="done" title="Gem og kopiér  (Esc)" onClick={done}>
-            <Icon name="check" /> Kopiér <kbd>Esc</kbd>
+          <span className={`status ${s.status}`} aria-live="polite">
+            {s.status === "saved" && (
+              <>
+                <Icon name="check" /> Kopieret
+              </>
+            )}
+            {s.status === "saving" && "Kopierer…"}
+            {s.status === "error" && "Kunne ikke kopiere"}
+          </span>
+          <button className="done" title="Luk. Billedet er allerede gemt og kopieret  (Esc)" onClick={done}>
+            Færdig <kbd>Esc</kbd>
           </button>
         </div>
       )}

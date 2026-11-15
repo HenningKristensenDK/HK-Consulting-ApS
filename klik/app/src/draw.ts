@@ -156,15 +156,22 @@ export function render(
   ctx.restore();
 }
 
-/** The final image: only the selection, with annotations, no dimming. */
-export async function exportPng(img: CanvasImageSource, sel: Rect, shapes: Shape[], s: number): Promise<Uint8Array> {
-  const c = document.createElement("canvas");
-  c.width = Math.round(sel.w);
-  c.height = Math.round(sel.h);
-  const ctx = c.getContext("2d")!;
+/** The selection with annotations as raw RGBA, prefixed by width and height
+ *  (u32 little-endian). Much faster than PNG encoding in the browser; the core
+ *  puts it on the clipboard at once and writes the PNG file itself. */
+export function exportRgba(img: CanvasImageSource, sel: Rect, shapes: Shape[], s: number): Uint8Array {
+  const w = Math.max(1, Math.round(sel.w));
+  const h = Math.max(1, Math.round(sel.h));
+  const c = new OffscreenCanvas(w, h);
+  const ctx = c.getContext("2d", { willReadFrequently: true })!;
   ctx.translate(-Math.round(sel.x), -Math.round(sel.y));
   ctx.drawImage(img, 0, 0);
-  for (const sh of shapes) drawShape(ctx, sh, s);
-  const blob = await new Promise<Blob>((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("toBlob"))), "image/png"));
-  return new Uint8Array(await blob.arrayBuffer());
+  for (const sh of shapes) drawShape(ctx as unknown as CanvasRenderingContext2D, sh, s);
+  const px = ctx.getImageData(0, 0, w, h).data;
+  const out = new Uint8Array(8 + px.length);
+  const dv = new DataView(out.buffer);
+  dv.setUint32(0, w, true);
+  dv.setUint32(4, h, true);
+  out.set(px, 8);
+  return out;
 }

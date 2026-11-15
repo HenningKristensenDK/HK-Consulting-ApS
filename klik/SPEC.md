@@ -1,6 +1,6 @@
 # Klik: product specification
 
-Version 0.5, 2026.11.15. Owner: Henning Kristensen (RTPM).
+Version 0.6, 2026.11.15. Owner: Henning Kristensen (RTPM).
 "Klik" is a working name.
 
 This spec records Henning's wishes for a simple screen capture tool that covers the most-used Snagit features with far fewer clicks. Each requirement says where it stands: **Built** (code exists and was tested in a browser, not yet on Windows), **Planned**, or **Open** (a decision is still needed). How the tool gets built is in `PLAN.md`.
@@ -36,7 +36,7 @@ Klik follows the RTPM product UI rules in `038-KNW-Universal brand color font an
 - Calm and light: white toolbar and hint, border `#e6e6f0`, text `#15162b`.
 - Active tool: Primary Indigo `#0d08d2`. One primary action per screen: "Kopiér" in Accent Yellow `#ffcc00`.
 - Marking colours: red `#C0392B`, indigo `#0d08d2`, green `#27AE60`, yellow `#ffcc00` (highlighter), ink `#15162b`. Numbered arrows default to indigo, pen and line to red.
-- App icon: Ink Navy `#070474` with an indigo glow upper-right, white selection corners and one yellow spotlight dot. Klik's own icon, not the RTPM mark, so the logo rules for the RTPM mark do not apply.
+- App icon: Ink Navy `#070474` with an indigo glow upper-right, white selection corners and a yellow step badge with the number 1. Klik's own icon, not the RTPM mark, so the logo rules for the RTPM mark do not apply.
 - Sentence case in all UI text.
 - Installer publisher: Real Time Project Management.
 
@@ -72,12 +72,13 @@ Priority: **Must** = MVP, **Should** = next release, **Could** = later.
 - `Ctrl+Z` undoes the last marking.
 - **Accept when:** a screenshot with the steps "1, 2, 3" takes one drag to select plus three drags to mark.
 
-### F4. Esc = save and copy: Must, Built
+### F4. Copied as soon as it is framed: Must, Built
 
-- `Esc` (or `Enter`, or the "Kopiér" button) saves the image with all markings as PNG in `Pictures\Klik\` and places it on the clipboard.
-- The window closes at once. `Ctrl+V` in Teams, Outlook, Word, PowerPoint or a browser pastes the marked image.
-- Esc before anything is selected cancels without saving. A ✕ button discards a capture.
-- **Accept when:** the pasted image in Teams and Word matches the editor, including all markings.
+- The moment the area is selected (the second click or the end of the drag), the image is on the clipboard and saved as PNG in `Pictures\Klik\`. No button, no Esc needed.
+- Every marking and every undo updates the clipboard and the same file within about 0.2 seconds. The toolbar shows "Kopieret".
+- `Esc`, `Enter` or "Færdig" only closes. The ✕ button deletes the file and closes.
+- Esc before anything is selected cancels without saving.
+- **Accept when:** selecting an area and pressing `Ctrl+V` in Teams pastes it with no other key; after adding arrows, `Ctrl+V` pastes the marked version.
 
 ### F5. Scrolling capture: Must, Planned
 
@@ -181,8 +182,8 @@ These targets are the pass/fail test. Henning does each task in Snagit and in Kl
 
 | Task | Klik flow | Target |
 |---|---|---|
-| Area screenshot into Teams | `PrtScn` → drag → `Esc` → `Ctrl+V` | 1 drag |
-| Screenshot with steps 1–3 | `PrtScn` → drag → `A` → 3 drags → `Esc` | 1 + 3 drags |
+| Area screenshot into Teams | `Ctrl+Alt+K` → drag → `Ctrl+V` in Teams | 1 drag |
+| Screenshot with steps 1–3 | `Ctrl+Alt+K` → drag → `A` → 3 drags → `Ctrl+V` | 1 + 3 drags |
 | 10-step guide | hotkey → your 10 clicks → hotkey | 0 extra clicks |
 | Video with yellow cursor | hotkey → drag → … → hotkey | 1 drag |
 | Long page | hotkey → click in window | 1 click |
