@@ -1,0 +1,27 @@
+[package]
+name = "klik"
+version = "0.1.0"
+description = "Klik - enkel screenshot"
+edition = "2021"
+
+[lib]
+name = "klik_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = "2"
+xcap = "0.9"
+arboard = "3"
+image = { version = "0.25", default-features = false, features = ["png"] }
+chrono = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
