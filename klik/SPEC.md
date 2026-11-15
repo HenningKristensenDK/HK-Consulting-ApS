@@ -1,6 +1,6 @@
 # Klik: product specification
 
-Version 0.3, 2026.11.15. Owner: Henning Kristensen (RTPM).
+Version 0.4, 2026.11.15. Owner: Henning Kristensen (RTPM).
 "Klik" is a working name.
 
 This spec records Henning's wishes for a simple screen capture tool that covers the most-used Snagit features with far fewer clicks. Each requirement says where it stands: **Built** (code exists and was tested in a browser, not yet on Windows), **Planned**, or **Open** (a decision is still needed). How the tool gets built is in `PLAN.md`.
@@ -124,7 +124,7 @@ Priority: **Must** = MVP, **Should** = next release, **Could** = later.
 | Microsoft Store (free registration, Microsoft signs the app, no SmartScreen warning) | Planned. Tauri does not produce MSIX by itself; the packaging step is not yet tested. |
 | Chrome Web Store browser extension | **Dropped** 2026.11.15: Klik is a standalone desktop app |
 
-### F13. Claude can read Klik (MCP server): Should, Planned
+### F13. Claude can read Klik (MCP server): Should, Built
 
 Klik ships a small local MCP server (`klik-mcp.exe`), so Claude can use Klik's output without the user pasting it.
 
@@ -133,12 +133,13 @@ Klik ships a small local MCP server (`klik-mcp.exe`), so Claude can use Klik's o
 | `klik_latest` | The newest capture: image, time, file path |
 | `klik_list` | Recent captures, guides and videos, newest first |
 | `klik_get` | One capture as an image, or one guide as step text plus images |
-| `klik_screenshot` (Could) | A new screenshot of the screen under the mouse. Klik shows a visible notice when it happens. |
+| `klik_screenshot` (Could, Planned) | A new screenshot of the screen under the mouse. Klik shows a visible notice when it happens. |
 
 - Read-only by default. It reads Klik's own folders and works even when the Klik app is closed.
+- Status: the first five tools are built and tested with an MCP client (two separate sessions) on Linux. Not yet tested on Windows or in Claude Desktop.
 - **Accept when:** in Claude Desktop, "What does my latest screenshot show?" gets an answer with no pasting.
 
-### F14. Handoff inbox between AI sessions: Should, Planned
+### F14. Handoff inbox between AI sessions: Should, Built
 
 The problem: a result from one AI session (chat, Project, Claude Code) is copied by hand into the next session. Klik becomes the shared place in between.
 
@@ -149,8 +150,8 @@ The problem: a result from one AI session (chat, Project, Claude Code) is copied
 | `handoff_read` | The next session reads a handoff in full |
 
 - Stored as plain Markdown and image files in `Documents\Klik\Inbox\`, so people and other tools can read them too.
-- The tray menu shows the inbox count and opens the folder.
-- Henning's `session-handoff` skill writes its brief to the inbox when Klik is connected, instead of a copy-paste block. The skill change is proposed and Henning approves it.
+- The tray menu opens the inbox folder (Built). Showing the count is Planned.
+- Henning's `session-handoff` skill writes its brief to the inbox when Klik is connected, instead of a copy-paste block. The skill change is proposed; Henning approves it (not changed yet).
 - (Could) A hotkey saves the clipboard text to the inbox, for AI tools without MCP.
 - **Accept when:** session A writes a handoff, and session B (in another Claude surface) continues from it after one short prompt, with no copy-paste.
 

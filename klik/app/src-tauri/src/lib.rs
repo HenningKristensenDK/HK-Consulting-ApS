@@ -119,8 +119,18 @@ fn finish(app: AppHandle, window: WebviewWindow, request: Request<'_>) -> Result
     Ok(path.to_string_lossy().into_owned())
 }
 
-fn open_folder(app: &AppHandle) {
-    if let Ok(dir) = output_dir(app) {
+/// The handoff inbox shared with Claude through klik-mcp (same default path).
+fn inbox_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = match std::env::var("KLIK_INBOX_DIR") {
+        Ok(v) if !v.trim().is_empty() => PathBuf::from(v.trim()),
+        _ => app.path().document_dir().map_err(err)?.join("Klik").join("Inbox"),
+    };
+    std::fs::create_dir_all(&dir).map_err(err)?;
+    Ok(dir)
+}
+
+fn open_dir(dir: Result<PathBuf, String>) {
+    if let Ok(dir) = dir {
         #[cfg(windows)]
         let _ = std::process::Command::new("explorer").arg(dir).spawn();
         #[cfg(not(windows))]
@@ -130,10 +140,11 @@ fn open_folder(app: &AppHandle) {
 
 fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let shot = MenuItem::with_id(app, "shot", "Tag screenshot   (PrtScn)", true, None::<&str>)?;
-    let folder = MenuItem::with_id(app, "folder", "Åbn mappe", true, None::<&str>)?;
+    let folder = MenuItem::with_id(app, "folder", "Åbn screenshots", true, None::<&str>)?;
+    let inbox = MenuItem::with_id(app, "inbox", "Åbn indbakke (Claude)", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Afslut Klik", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&shot, &folder, &sep, &quit])?;
+    let menu = Menu::with_items(app, &[&shot, &folder, &inbox, &sep, &quit])?;
 
     TrayIconBuilder::with_id("klik")
         .icon(app.default_window_icon().cloned().expect("app icon"))
@@ -142,7 +153,8 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, e| match e.id.as_ref() {
             "shot" => capture_async(app),
-            "folder" => open_folder(app),
+            "folder" => open_dir(output_dir(app)),
+            "inbox" => open_dir(inbox_dir(app)),
             "quit" => app.exit(0),
             _ => {}
         })

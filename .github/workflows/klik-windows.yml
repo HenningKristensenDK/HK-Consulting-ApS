@@ -4,15 +4,13 @@ on:
   push:
     paths:
       - "klik/app/**"
+      - "klik/mcp/**"
       - ".github/workflows/klik-windows.yml"
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: klik/app
     steps:
       - uses: actions/checkout@v4
 
@@ -26,14 +24,50 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: klik/app/src-tauri
+          workspaces: |
+            klik/mcp
+            klik/app/src-tauri
 
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npx tauri build
+      # 1. MCP server: test, build, and place it where the app installer picks it up.
+      - name: Test klik-mcp
+        working-directory: klik/mcp
+        run: cargo test
+
+      - name: Build klik-mcp
+        working-directory: klik/mcp
+        run: cargo build --release
+
+      - name: Add klik-mcp to the app bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force klik/app/src-tauri/binaries | Out-Null
+          Copy-Item klik/mcp/target/release/klik-mcp.exe klik/app/src-tauri/binaries/klik-mcp-x86_64-pc-windows-msvc.exe
+          New-Item -ItemType Directory -Force klik/mcp/mcpb/server | Out-Null
+          Copy-Item klik/mcp/target/release/klik-mcp.exe klik/mcp/mcpb/server/klik-mcp.exe
+
+      # 2. Claude Desktop extension (.mcpb)
+      - name: Pack Claude Desktop extension
+        working-directory: klik/mcp/mcpb
+        run: |
+          npx -y @anthropic-ai/mcpb@2.1.2 validate manifest.json
+          npx -y @anthropic-ai/mcpb@2.1.2 pack . Klik.mcpb
+
+      # 3. The Klik app installer (includes klik-mcp.exe next to Klik.exe)
+      - name: Build Klik app
+        working-directory: klik/app
+        run: |
+          npm ci
+          npm run typecheck
+          npx tauri build
 
       - uses: actions/upload-artifact@v4
         with:
           name: Klik-installer
           path: klik/app/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Klik-Claude-extension
+          path: klik/mcp/mcpb/Klik.mcpb
           if-no-files-found: error
