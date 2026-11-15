@@ -30,6 +30,13 @@ html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #000;
   pointer-events: none; animation: fade 0.25s ease-out;
 }
 .hint b { color: var(--ink); font-weight: 600; }
+.hint { text-align: center; }
+.hint-key { margin-top: 6px; font-size: 12px; }
+.hint-key kbd {
+  font: 600 11px "Segoe UI", system-ui, sans-serif; color: var(--ink);
+  padding: 2px 7px; border-radius: 5px; background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--glass-line);
+}
 
 .size {
   padding: 3px 8px; border-radius: 6px; font-size: 12px; font-variant-numeric: tabular-nums;

@@ -6,6 +6,7 @@
 //! the clipboard.
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
 use tauri::ipc::{InvokeBody, Request, Response};
@@ -19,6 +20,25 @@ const OVERLAY: &str = "overlay";
 /// The last captured monitor image: (width, height, RGBA bytes).
 #[derive(Default)]
 struct Shot(Mutex<Option<(u32, u32, Vec<u8>)>>);
+
+/// The hotkey Klik got, shown in the tray menu and the overlay hint.
+#[derive(Default)]
+struct Hotkey(Mutex<Option<String>>);
+
+/// Opening Klik takes a screenshot. The first launch has to wait until the
+/// overlay page is loaded, so the request is parked here until `frontend_ready`.
+static CAPTURE_ON_READY: AtomicBool = AtomicBool::new(false);
+
+/// Hotkeys to try, in order. The first one no other program owns wins.
+/// PrtScn is left alone on purpose: Snagit and Windows' Snipping Tool use it.
+fn hotkey_candidates() -> Vec<(Shortcut, &'static str)> {
+    vec![
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyK), "Ctrl+Alt+K"),
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyK), "Ctrl+Shift+K"),
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyS), "Ctrl+Alt+S"),
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyX), "Ctrl+Shift+X"),
+    ]
+}
 
 fn overlay(app: &AppHandle) -> Option<WebviewWindow> {
     app.get_webview_window(OVERLAY)
@@ -69,6 +89,19 @@ fn get_shot(shot: tauri::State<'_, Shot>) -> Result<Response, String> {
     out.extend_from_slice(&h.to_le_bytes());
     out.extend_from_slice(rgba);
     Ok(Response::new(out))
+}
+
+/// Called by the overlay page once it listens for captures.
+#[tauri::command]
+fn frontend_ready(app: AppHandle) {
+    if CAPTURE_ON_READY.swap(false, Ordering::SeqCst) {
+        capture_async(&app);
+    }
+}
+
+#[tauri::command]
+fn hotkey_label(hotkey: tauri::State<'_, Hotkey>) -> Option<String> {
+    hotkey.0.lock().unwrap().clone()
 }
 
 #[tauri::command]
@@ -138,17 +171,30 @@ fn open_dir(dir: Result<PathBuf, String>) {
     }
 }
 
-fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
-    let shot = MenuItem::with_id(app, "shot", "Tag screenshot   (PrtScn)", true, None::<&str>)?;
+fn setup_tray(app: &AppHandle, hotkey: Option<&str>) -> tauri::Result<()> {
+    let shot_label = match hotkey {
+        Some(k) => format!("Tag screenshot   ({k})"),
+        None => "Tag screenshot".to_string(),
+    };
+    let key_label = match hotkey {
+        Some(k) => format!("Genvejstast: {k}"),
+        None => "Ingen ledig genvejstast. Klik på ikonet i stedet".to_string(),
+    };
+    let shot = MenuItem::with_id(app, "shot", shot_label, true, None::<&str>)?;
+    let key = MenuItem::with_id(app, "key", key_label, false, None::<&str>)?;
     let folder = MenuItem::with_id(app, "folder", "Åbn screenshots", true, None::<&str>)?;
     let inbox = MenuItem::with_id(app, "inbox", "Åbn indbakke (Claude)", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Afslut Klik", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&shot, &folder, &inbox, &sep, &quit])?;
+    let menu = Menu::with_items(app, &[&shot, &key, &folder, &inbox, &sep, &quit])?;
+    let tooltip = match hotkey {
+        Some(k) => format!("Klik  -  klik her eller tryk {k}"),
+        None => "Klik  -  klik her for screenshot".to_string(),
+    };
 
     TrayIconBuilder::with_id("klik")
         .icon(app.default_window_icon().cloned().expect("app icon"))
-        .tooltip("Klik  -  PrtScn eller Ctrl+Shift+X")
+        .tooltip(tooltip)
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, e| match e.id.as_ref() {
@@ -174,8 +220,10 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let print_screen = Shortcut::new(None, Code::PrintScreen);
-    let fallback = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyX);
+    // Started at login (later: autostart) should stay quiet. Started by the
+    // user from the Start menu or a shortcut should take a screenshot.
+    let background = std::env::args().any(|a| a == "--background");
+    CAPTURE_ON_READY.store(!background, Ordering::SeqCst);
 
     tauri::Builder::default()
         // A second launch just triggers a capture in the running instance.
@@ -192,17 +240,30 @@ pub fn run() {
                 .build(),
         )
         .manage(Shot::default())
-        .invoke_handler(tauri::generate_handler![get_shot, show_overlay, cancel, finish])
+        .manage(Hotkey::default())
+        .invoke_handler(tauri::generate_handler![
+            get_shot,
+            show_overlay,
+            cancel,
+            finish,
+            frontend_ready,
+            hotkey_label
+        ])
         .setup(move |app| {
             use tauri_plugin_global_shortcut::GlobalShortcutExt;
-            // Register each key on its own: if Windows already owns PrtScn
-            // (Settings > Accessibility > Keyboard), Ctrl+Shift+X still works.
-            for s in [print_screen, fallback] {
-                if let Err(e) = app.global_shortcut().register(s) {
-                    eprintln!("klik: could not register {s:?}: {e}");
+            // Take the first hotkey that no other program (e.g. Snagit) owns.
+            let mut got = None;
+            for (s, label) in hotkey_candidates() {
+                match app.global_shortcut().register(s) {
+                    Ok(()) => {
+                        got = Some(label);
+                        break;
+                    }
+                    Err(e) => eprintln!("klik: {label} is taken: {e}"),
                 }
             }
-            setup_tray(app.handle())?;
+            *app.state::<Hotkey>().0.lock().unwrap() = got.map(String::from);
+            setup_tray(app.handle(), got)?;
             Ok(())
         })
         .on_window_event(|window, event| {

@@ -23,9 +23,17 @@ export function onCaptured(cb: () => void): () => void {
     return () => {};
   }
   let off = () => {};
-  listen("captured", cb).then((u) => (off = u));
+  listen("captured", cb).then((u) => {
+    off = u;
+    // Tell the core we listen; a pending "open Klik = screenshot" fires now.
+    invoke("frontend_ready");
+  });
   return () => off();
 }
+
+/** The hotkey Klik got (e.g. "Ctrl+Alt+K"), or null if all were taken. */
+export const hotkeyLabel = (): Promise<string | null> =>
+  inTauri ? invoke<string | null>("hotkey_label") : Promise.resolve("Ctrl+Alt+K");
 
 export const showOverlay = () => (inTauri ? invoke("show_overlay") : Promise.resolve());
 export const cancel = () => (inTauri ? invoke("cancel") : Promise.resolve());

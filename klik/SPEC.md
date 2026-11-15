@@ -34,7 +34,7 @@ Priority: **Must** = MVP, **Should** = next release, **Could** = later.
 
 ### F1. Screenshot: Must, Built
 
-- `PrtScn` (or `Ctrl+Shift+X` as a fallback) freezes the monitor under the mouse.
+- Opening Klik (Start menu, taskbar or tray icon) or `Ctrl+Alt+K` freezes the monitor under the mouse. If another program owns that key, Klik takes the first free one of `Ctrl+Shift+K`, `Ctrl+Alt+S`, `Ctrl+Shift+X` and shows it in the tray menu. `PrtScn` is left to Snagit and the Snipping Tool.
 - Drag to select an area, or click once to take the whole screen.
 - The selection shows its size in pixels.
 - Right-click starts the selection again.

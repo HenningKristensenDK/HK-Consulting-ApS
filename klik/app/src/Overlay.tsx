@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
-import { cancel, finish, inTauri, loadShot, onCaptured, showOverlay, type Shot } from "./bridge";
+import { cancel, finish, hotkeyLabel, inTauri, loadShot, onCaptured, showOverlay, type Shot } from "./bridge";
 import { exportPng, normRect, render, type Pt, type Rect, type Shape, type Tool } from "./draw";
 import { Icon } from "./icons";
 
@@ -34,6 +34,7 @@ export function Overlay() {
     toast: "",
   });
   const [, rerender] = useReducer((x: number) => x + 1, 0);
+  const hotkey = useRef<string | null>(null);
   const frame = useRef(0);
 
   /** Image pixels per CSS pixel. */
@@ -58,6 +59,7 @@ export function Overlay() {
     () =>
       onCaptured(async () => {
         const next = await loadShot();
+        hotkey.current = await hotkeyLabel();
         shot.current?.bitmap.close();
         shot.current = next;
         const c = canvasRef.current!;
@@ -219,6 +221,11 @@ export function Overlay() {
       {s.mode === "select" && !s.start && (
         <div className="hint">
           <b>Træk</b> for at markere &nbsp;·&nbsp; <b>Klik</b> = hele skærmen &nbsp;·&nbsp; <b>Esc</b> = annullér
+          {hotkey.current && (
+            <div className="hint-key">
+              Næste gang: tryk <kbd>{hotkey.current}</kbd>
+            </div>
+          )}
         </div>
       )}
 
