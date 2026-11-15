@@ -118,7 +118,7 @@ Priority: **Must** = MVP, **Should** = next release, **Could** = later.
 
 | Channel | Status |
 |---|---|
-| Windows installer built by GitHub Actions, current user only, no admin rights | Built, first build running |
+| Windows installer built by GitHub Actions, current user only, no admin rights | Built. First build succeeded 2026.11.13; installer not yet tried on a PC |
 | Microsoft Store (free registration, Microsoft signs the app, no SmartScreen warning) | Planned. Tauri does not produce MSIX by itself; the packaging step is not yet tested. |
 | Chrome Web Store, as a browser extension for step guides and demo videos in web apps | Open, see Q1 and Q2 |
 
