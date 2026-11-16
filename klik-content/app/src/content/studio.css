@@ -1,0 +1,88 @@
+/* Klik Content window. RTPM product UI: Inter only, calm and light,
+   indigo for the active state, one yellow primary action per screen. */
+html.studio-page, html.studio-page body, html.studio-page #root { background: #f7f7fb; overflow: hidden; user-select: auto; }
+
+.studio {
+  height: 100vh; display: grid;
+  grid-template-columns: 240px 280px 1fr; grid-template-rows: 60px 1fr;
+  grid-template-areas: "top top top" "shots list main";
+  color: var(--text); font-size: 14px;
+}
+.studio button { font: inherit; cursor: pointer; }
+.studio input, .studio textarea, .studio select {
+  font: inherit; color: var(--text); background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-btn); padding: 8px 10px; width: 100%;
+}
+.studio input:focus, .studio textarea:focus, .studio select:focus { outline: 2px solid var(--indigo); outline-offset: -1px; }
+.studio textarea { resize: vertical; }
+
+.st-top {
+  grid-area: top; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  background: #fff; border-bottom: 1px solid var(--border);
+}
+.st-brand { font-weight: 700; font-size: 16px; color: var(--navy); white-space: nowrap; }
+.st-brand span { font-weight: 500; color: var(--text-2); }
+.st-title { max-width: 280px; }
+.seg { display: flex; background: var(--indigo-050); border-radius: var(--radius-btn); padding: 3px; margin-left: auto; }
+.seg button { border: 0; background: none; padding: 7px 14px; border-radius: 7px; color: var(--text-2); font-weight: 500; }
+.seg button.on { background: var(--indigo); color: #fff; }
+.primary { border: 0; background: var(--yellow); color: var(--text); font-weight: 600; padding: 9px 16px; border-radius: var(--radius-btn); white-space: nowrap; }
+.primary:hover { background: #f2c200; }
+.primary:disabled, .accent:disabled { opacity: 0.5; cursor: default; }
+.accent { border: 0; background: var(--indigo); color: #fff; font-weight: 600; padding: 9px 16px; border-radius: var(--radius-btn); }
+.ghost { border: 1px solid var(--border); background: #fff; color: var(--text); padding: 8px 14px; border-radius: var(--radius-btn); white-space: nowrap; }
+.ghost:hover { background: var(--indigo-050); }
+.ghost.sm { padding: 5px 10px; font-size: 13px; }
+.link { border: 0; background: none; color: var(--indigo); font-weight: 500; padding: 0; }
+
+.st-shots, .st-list { overflow-y: auto; padding: 14px; border-right: 1px solid var(--border); background: #fff; }
+.st-shots { grid-area: shots; }
+.st-list { grid-area: list; display: flex; flex-direction: column; gap: 10px; }
+.st-h { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; color: var(--text); margin-top: 4px; }
+.st-hint { color: var(--text-2); font-size: 13px; margin: 6px 0 10px; }
+.shot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.shot { border: 1px solid var(--border); background: #fafafd; border-radius: 9px; padding: 0; aspect-ratio: 16 / 10; overflow: hidden; }
+.shot:hover { outline: 2px solid var(--indigo); }
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.st-list ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.st-list li button {
+  width: 100%; display: grid; grid-template-columns: 22px 1fr; grid-template-rows: auto auto; column-gap: 8px;
+  text-align: left; border: 1px solid transparent; background: none; padding: 7px 8px; border-radius: 9px; color: var(--text);
+}
+.st-list li button:hover { background: var(--indigo-050); }
+.st-list li button.on { border-color: var(--indigo); background: var(--indigo-050); }
+.st-list li b { grid-row: span 2; color: var(--muted); font-weight: 600; }
+.st-list .k { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.st-list .t { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.fld { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 500; color: var(--text-2); }
+.fld.grow { flex: 1; }
+
+.st-main { grid-area: main; overflow: auto; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; padding: 18px; align-items: start; }
+.preview { width: 100%; max-height: calc(100vh - 100px); margin: 0 auto; background: #fff; border-radius: 14px; box-shadow: 0 2px 8px rgba(21,22,43,0.08); overflow: hidden; }
+.preview canvas { width: 100%; height: 100%; display: block; }
+.edit { display: flex; flex-direction: column; gap: 10px; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.issues { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.issues li { padding: 7px 10px; border-radius: 9px; }
+.issues .stop { background: #fdecee; color: #b02a34; }
+.issues .warn { background: #fdf4dd; color: #8a6600; }
+.issues .ok { background: #e8f6eb; color: #1b7a31; }
+p.warn { font-size: 13px; background: #fdf4dd; color: #8a6600; padding: 7px 10px; border-radius: 9px; margin: 0; }
+
+.claude {
+  position: fixed; right: 18px; top: 72px; width: 420px; background: #fff; border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 8px 24px rgba(21,22,43,0.12); z-index: 5;
+}
+.claude p { margin: 0; font-size: 13px; color: var(--text-2); }
+.st-note {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); max-width: 70vw;
+  background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 10px 16px;
+  box-shadow: 0 8px 24px rgba(21,22,43,0.12); font-size: 13px;
+}
+.accent.sm { padding: 5px 12px; font-size: 13px; }
+.drafts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.drafts li { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 9px; }
+.claude details { font-size: 13px; color: var(--text-2); display: flex; flex-direction: column; gap: 6px; }
+.claude details textarea { margin: 6px 0; }
