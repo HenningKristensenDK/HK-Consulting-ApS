@@ -216,7 +216,7 @@ These targets are the pass/fail test. Henning does each task in Snagit and in Kl
 | Area screenshot into Teams | `Ctrl+Alt+K` → drag → `Ctrl+V` in Teams | 1 drag |
 | Screenshot with steps 1–3 | `Ctrl+Alt+K` → drag → `A` → 3 drags → `Ctrl+V` | 1 + 3 drags |
 | 10-step guide | hotkey → your 10 clicks → hotkey | 0 extra clicks |
-| Video with yellow cursor | hotkey → drag → … → hotkey | 1 drag |
+| Video with indigo cursor | hotkey → drag → … → hotkey | 1 drag |
 | Long page | hotkey → click in window | 1 click |
 
 ## 5. Non-functional requirements

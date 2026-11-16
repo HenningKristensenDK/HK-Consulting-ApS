@@ -62,7 +62,7 @@ Ude af MVP: webcam, GIF, cloud-deling, OCR, Smart Redact, skabeloner, Mac.
 | Område-screenshot ind i Teams | `PrtScn` → træk → `Ctrl+V` i Teams | 1 tast + 1 træk |
 | Screenshot med trin 1–3 | `PrtScn` → træk → `A` → 3 træk → `Esc` | 1 træk + 3 træk |
 | Step-guide over 10 klik | `Ctrl+Shift+T` → dine 10 klik → `Ctrl+Shift+T` | 0 ekstra klik |
-| Video med gul cursor | `Ctrl+Shift+R` → træk → … → `Ctrl+Shift+R` | 1 træk |
+| Video med indigo cursor | `Ctrl+Shift+R` → træk → … → `Ctrl+Shift+R` | 1 træk |
 | Lang side | `Ctrl+Shift+S` → klik i vinduet | 1 klik |
 
 Et lille, flydende panel (4 ikoner) findes også for dem, der ikke bruger genvejstaster. Panelet kan skjules.
