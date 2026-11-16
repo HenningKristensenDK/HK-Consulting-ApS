@@ -11,6 +11,12 @@ const P: Record<string, React.ReactNode> = {
       <path d="M9.5 14.5L19 5M12.5 5H19v6.5" />
     </>
   ),
+  callout: (
+    <>
+      <rect x="2.5" y="3.5" width="13" height="9" rx="2" />
+      <path d="M5.5 7h7M5.5 9.5h4.5M14 14.5l6 5M16.5 20h3.5v-3.5" />
+    </>
+  ),
   pen: <path d="M4 18c3-1 4-6 7-6s2 5 5 5 3-5 4-7" />,
   line: <path d="M5 19L19 5" />,
   undo: (

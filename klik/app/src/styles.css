@@ -24,7 +24,14 @@ html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #000;
 
 .screen { position: absolute; inset: 0; width: 100vw; height: 100vh; display: block; cursor: crosshair; touch-action: none; }
 
-.hint, .size, .bar, .toast {
+.hint, .size, .bar, .comment {
+  position: absolute; margin: 0; resize: none; overflow: hidden; outline: none;
+  background: #fff; color: var(--text); border: 2px solid var(--indigo); border-radius: 8px;
+  font-family: "Inter", "Segoe UI", sans-serif; font-weight: 500; white-space: pre-wrap;
+  box-shadow: 0 2px 8px rgba(7, 4, 116, 0.25), 0 0 0 4px rgba(13, 8, 210, 0.15);
+}
+.comment::placeholder { color: var(--muted); }
+.toast {
   position: absolute;
   background: var(--surface);
   color: var(--text);

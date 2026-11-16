@@ -9,7 +9,8 @@ Enkel screenshot til Windows. Se `../PLAN.md` for plan og status.
 | Tast | Hvad sker der |
 |---|---|
 | `Ctrl+Alt+K` | Skærmen under musen fryses. Træk et område, eller klik for hele skærmen |
-| Tegn | Marker er valgt fra start. `M` marker, `A` pil med nummer, `P` frihånd, `L` linje |
+| Tegn | Marker er valgt fra start. `M` marker, `A` pil med nummer, `K` pil med kommentar, `P` frihånd, `L` linje |
+| Kommentar | Træk fra hvor teksten skal stå hen til det, den peger på. Skriv, og tryk `Enter`. `Shift+Enter` giver ny linje. Klik uden at trække giver kun tekstfeltet |
 | `Shift` mens du tegner | Lige streg med marker og frihånd |
 | `Ctrl+Z` | Fortryd |
 | Højreklik | Vælg område forfra |
@@ -23,7 +24,7 @@ Klik ligger i proceslinjens ikonbakke. Venstreklik = nyt screenshot. Højreklik 
 ## Installation
 
 Hver push bygger en installer i GitHub Actions ("Klik - Windows build").
-Hent artefaktet `Klik-installer`, pak ud og kør `Klik_0.1.3_x64-setup.exe`.
+Hent artefaktet `Klik-installer`, pak ud og kør `Klik_0.1.4_x64-setup.exe`.
 Den installeres kun for din bruger (ingen admin). Windows SmartScreen advarer, fordi filen ikke er kodesigneret: "Flere oplysninger" > "Kør alligevel".
 
 ## Udvikling
