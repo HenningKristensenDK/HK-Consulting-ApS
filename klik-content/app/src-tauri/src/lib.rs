@@ -228,7 +228,7 @@ fn list_captures(app: AppHandle) -> Result<Vec<Capture>, String> {
 /// A plain file name, never a path, so the content maker can only reach its own folders.
 fn safe_name(name: &str) -> Result<&str, String> {
     let n = name.trim();
-    if n.is_empty() || n == "." || n == ".." || n.contains(['/', '\', ':']) || n.contains("..") {
+    if n.is_empty() || n == "." || n == ".." || n.contains(['/', '\\', ':']) || n.contains("..") {
         return Err("invalid file name".into());
     }
     Ok(n)
