@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import logoWhiteUrl from "../assets/rtpm-realtime-white.svg";
-import { drawSlide, loadFonts, SIZE, textIssues, type Assets, type Format, type Issue, type Kind, type Profile, type Slide } from "./render";
+import { DEFAULT_PROFILE, drawSlide, loadFonts, SIZE, textIssues, type Assets, type Format, type Issue, type Kind, type Profile, type Slide } from "./render";
 import { listCaptures, listClaudeDrafts, openExports, readCapture, type Capture, type ClaudeDraft } from "./io";
 import { exportDeck } from "./export";
 
@@ -14,6 +14,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 const KIND_LABEL: Record<Kind, string> = {
   cover: "Forside",
   shot: "Skærmbillede",
+  rule: "Regel",
   text: "Tekst",
   closer: "Afslutning",
 };
@@ -26,6 +27,8 @@ function blank(kind: Kind, shot?: string): Slide {
       return { id: uid(), kind, tag: "", headline: "Recognise this on your project?", highlight: "on your project?", body: "[One low-friction offer line]" };
     case "text":
       return { id: uid(), kind, tag: "", headline: "[One idea per slide]", highlight: "", body: "[Max 25 words]" };
+    case "rule":
+      return { id: uid(), kind, tag: "", headline: "[The rule, 5 to 7 words]", highlight: "", body: "[Why it holds, max 25 words]", bodyHighlight: "", inPractice: "[What it looks like in the reader's own tools]" };
     default:
       return { id: uid(), kind, tag: "", headline: "[What this screen shows]", highlight: "", body: "", shot };
   }
@@ -33,17 +36,37 @@ function blank(kind: Kind, shot?: string): Slide {
 
 type Saved = { fmt: Format; title: string; slides: Slide[]; profile: Profile; angle?: string };
 
-const KINDS: Kind[] = ["cover", "shot", "text", "closer"];
+const KINDS: Kind[] = ["cover", "shot", "rule", "text", "closer"];
+
+type RawSlide = Partial<Slide> & { body_highlight?: string; in_practice?: string };
+
+/** The profile wording before the V2 template, replaced on load so old decks get the website wording. */
+const OLD_ROLE = "Project Management · Digital Execution · Offshore Wind";
+
+function withDefaults(p: Partial<Profile> | undefined): Profile {
+  const role = !p?.role || p.role === OLD_ROLE ? DEFAULT_PROFILE.role : p.role;
+  return { ...DEFAULT_PROFILE, ...p, role, experience: p?.experience ?? DEFAULT_PROFILE.experience, photo: p?.photo ?? null };
+}
 
 /** Reads a deck Claude wrote: {format, title, angle, slides:[...]} or a bare slide array. */
 function parseDeck(raw: string): { fmt?: Format; title?: string; angle?: string; slides: Slide[] } {
   const m = raw.match(/[\[{][\s\S]*[\]}]/);
   const data = JSON.parse(m ? m[0] : raw) as unknown;
-  const obj = (Array.isArray(data) ? { slides: data } : data) as { format?: string; title?: string; angle?: string; slides?: Partial<Slide>[] };
+  const obj = (Array.isArray(data) ? { slides: data } : data) as { format?: string; title?: string; angle?: string; slides?: RawSlide[] };
   if (!Array.isArray(obj.slides) || !obj.slides.length) throw new Error("no slides");
   const slides = obj.slides.map((r) => {
     const kind = KINDS.includes(r.kind as Kind) ? (r.kind as Kind) : r.shot ? "shot" : "text";
-    return { id: r.id ?? uid(), kind, tag: r.tag ?? "", headline: r.headline ?? "", highlight: r.highlight ?? "", body: r.body ?? "", shot: r.shot } as Slide;
+    return {
+      id: r.id ?? uid(),
+      kind,
+      tag: r.tag ?? "",
+      headline: r.headline ?? "",
+      highlight: r.highlight ?? "",
+      body: r.body ?? "",
+      bodyHighlight: r.bodyHighlight ?? r.body_highlight ?? "",
+      inPractice: r.inPractice ?? r.in_practice ?? "",
+      shot: r.shot,
+    } as Slide;
   });
   const fmt = obj.format === "16x9" || obj.format === "16:9" ? "16x9" : obj.format === "4x5" || obj.format === "4:5" ? "4x5" : undefined;
   return { fmt, title: obj.title, angle: obj.angle, slides };
@@ -52,7 +75,7 @@ function parseDeck(raw: string): { fmt?: Format; title?: string; angle?: string;
 function load(): Saved {
   try {
     const s = JSON.parse(localStorage.getItem(STORE) ?? "");
-    if (s && Array.isArray(s.slides)) return s;
+    if (s && Array.isArray(s.slides)) return { ...s, profile: withDefaults(s.profile) };
   } catch {
     /* first run */
   }
@@ -60,7 +83,7 @@ function load(): Saved {
     fmt: "4x5",
     title: "Nyt opslag",
     slides: [blank("cover"), blank("closer")],
-    profile: { name: "Henning Kristensen", role: "Project Management · Digital Execution · Offshore Wind", photo: null },
+    profile: withDefaults(undefined),
   };
 }
 
@@ -145,8 +168,8 @@ export function Studio() {
     const { w, h } = SIZE[fmt];
     c.width = w;
     c.height = h;
-    setIssues(drawSlide(c.getContext("2d")!, fmt, current, index, slides.length, profile, assets.current));
-  }, [ready, current, index, slides.length, fmt, profile]);
+    setIssues(drawSlide(c.getContext("2d")!, fmt, slides, index, profile, assets.current));
+  }, [ready, current, index, slides, fmt, profile]);
 
   const update = (patch: Partial<Slide>) => setSlides((all) => all.map((s) => (s.id === current.id ? { ...s, ...patch } : s)));
 
@@ -224,9 +247,10 @@ export function Studio() {
         : "Look at my recent screenshots with klik_list_captures and klik_get_capture, and pick the ones that tell the story.",
       "Story arc: a recognisable project situation, the usual answer, the turn, what they see (one item, one owner), why it holds, the offer.",
       "RTPM brand: sentence case, no em-dashes, headline 5 to 7 words, body max 25 words, one highlight of 1 to 4 words taken from the headline, show do not pitch, no URLs, no unapproved numbers (write [placeholder]), sample data labelled. On my personal posts do not name RTPM. Never describe a customer system unless I say the customer approved it.",
-      "Slide kinds: cover (dark), shot (one screenshot, light), text (light), closer (dark, one question or offer).",
+      "Slide kinds: cover (dark: tag names the topic, body names the reader), shot (one screenshot, light), rule (light: one rule, body with one bodyHighlight span, and inPractice saying what the rule looks like in the reader's own tools; numbered automatically), text (light), closer (dark, one question or offer).",
+      "One highlight per slide: on a rule slide use bodyHighlight or highlight, not both.",
       "When done, save it with handoff_write. Title starts with \"Klik deck:\". In the text, put the deck in a fenced block marked klik-deck containing JSON:",
-      '{"format":"' + fmt + '","title":"...","angle":"...","slides":[{"kind":"cover|shot|text|closer","shot":"file name or omit","tag":"","headline":"","highlight":"","body":""}]}',
+      '{"format":"' + fmt + '","title":"...","angle":"...","slides":[{"kind":"cover|shot|rule|text|closer","shot":"file name or omit","tag":"","headline":"","highlight":"","body":"","bodyHighlight":"rule only","inPractice":"rule only"}]}',
       "Then tell me in two lines which angle you chose and why.",
     ].join("\n");
   };
@@ -304,6 +328,7 @@ export function Studio() {
           ))}
         </ol>
         <div className="row">
+          <button className="ghost sm" onClick={() => insertBeforeCloser(blank("rule"))}>+ Regel</button>
           <button className="ghost sm" onClick={() => insertBeforeCloser(blank("text"))}>+ Tekst</button>
           <button className="ghost sm" onClick={() => move(-1)} aria-label="Flyt op">↑</button>
           <button className="ghost sm" onClick={() => move(1)} aria-label="Flyt ned">↓</button>
@@ -313,7 +338,8 @@ export function Studio() {
 
         <div className="st-h"><span>Profil</span></div>
         <label className="fld">Navn<input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} /></label>
-        <label className="fld">Rolle<input value={profile.role} onChange={(e) => setProfile({ ...profile, role: e.target.value })} /></label>
+        <label className="fld">Titel<input value={profile.role} onChange={(e) => setProfile({ ...profile, role: e.target.value })} /></label>
+        <label className="fld">Erfaring (forside)<input value={profile.experience ?? ""} onChange={(e) => setProfile({ ...profile, experience: e.target.value })} /></label>
         <label className="fld">Foto (gemmes kun på denne pc)
           <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => pickPhoto(e.target.files?.[0])} />
         </label>
@@ -335,6 +361,12 @@ export function Studio() {
           <label className="fld">Overskrift<textarea rows={2} value={current.headline} onChange={(e) => update({ headline: e.target.value })} /></label>
           <label className="fld">Fremhævning (ord fra overskriften)<input value={current.highlight} onChange={(e) => update({ highlight: e.target.value })} placeholder="Ingen" /></label>
           <label className="fld">Tekst<textarea rows={3} value={current.body} onChange={(e) => update({ body: e.target.value })} /></label>
+          {current.kind === "rule" && (
+            <>
+              <label className="fld">Fremhævning i teksten (ord fra teksten)<input value={current.bodyHighlight ?? ""} onChange={(e) => update({ bodyHighlight: e.target.value })} placeholder="Ingen" /></label>
+              <label className="fld">I praksis (sådan ser reglen ud i læserens egne værktøjer)<textarea rows={2} value={current.inPractice ?? ""} onChange={(e) => update({ inPractice: e.target.value })} /></label>
+            </>
+          )}
           {current.kind === "shot" && (
             <label className="fld">Skærmbillede
               <select value={current.shot ?? ""} onChange={(e) => update({ shot: e.target.value })}>

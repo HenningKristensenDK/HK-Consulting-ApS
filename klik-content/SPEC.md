@@ -1,6 +1,6 @@
 # Klik Content: specification
 
-Version 0.1, 2026.11.16. Owner: Henning Kristensen.
+Version 0.2, 2026.11.16. Owner: Henning Kristensen.
 
 Klik Content is Klik plus a built-in content maker. It turns screenshots (and later recordings) into finished LinkedIn content and presentations in the RTPM brand. It is a separate app next to Klik so it never overwrites it. Klik's own spec is `../klik/SPEC.md`; requirement numbers F1-F14 refer to it, and F15 there describes the full recording-to-post flow this app grows into.
 
@@ -17,9 +17,10 @@ Status words as in Klik's spec: **Built** (code exists and was tested in a brows
 
 - Opened from the tray menu: "Lav opslag (karrusel eller præsentation)".
 - Recent screenshots from `Pictures\Klik` (newest 60). One click adds a screenshot slide.
-- Slide kinds: cover (dark), screenshot (light), text (light), closer (dark).
+- Slide kinds: cover (dark), screenshot (light), rule (light, V2), text (light), closer (dark).
+- Rule slide (V2): kicker "Rule n of N" and the big indigo number are set automatically; headline, body with one indigo span, and an "In practice" line saying what the rule looks like in the reader's own tools.
 - Per slide: tag, headline, highlight (words from the headline), body, screenshot.
-- Reorder, delete, add text slide. Profile chip: name, role, photo (chosen once, kept only on the PC, never in the repo).
+- Reorder, delete, add rule or text slide. Profile: name, title, experience line, photo (chosen once, kept only on the PC, never in the repo). Defaults are the website wording: "Founder, solution architect and client lead" and "20+ years in project management, offshore wind and large construction."
 - The deck is saved automatically on the PC.
 
 ## C3. Two formats: Must, Built
@@ -31,7 +32,7 @@ Status words as in Klik's spec: **Built** (code exists and was tested in a brows
 
 ## C4. Brand checks: Must, Built
 
-Rendered from `rtpm-brand-system` tokens and the brand guide of 2026.11.15 rev 2. Colours: Ink Navy, Indigo, Gold, Paper, Ink. Fonts: Barlow Semi Condensed 700 for headlines, Inter for the rest (bundled). One highlight per slide: gold on dark, indigo on light. The text shrinks to the phone floors (headline 96 px, body 36 px, labels 30 px) and is flagged if it still does not fit. Also flagged: em-dashes, URLs, highlight not in the headline, more than 4 highlighted words, headline outside 4-8 words, body over 25 words, any number (must come from an approved source), "AI-powered" or "unique" in a headline, carousel length outside 6-9. The "Real Time" logo appears only on the closer.
+Layout follows the approved V2 carousel template (brand guide section 5b, Henning 2026.11.16): cover with soft indigo glow, kicker, headline 116 px, subtitle, "Swipe →" right-aligned in light blue (never gold) and the profile block (headshot 168 × 210, radius 18, name, title, experience); interiors with a round headshot, name and page "3/8" in indigo; 16:9 cover with a 500 px profile column, 16:9 rule with a 760 px left zone and a divider. The glow values are a proposal until the brand system fixes them. Colours: Ink Navy, Indigo, Gold, Paper, Ink. Fonts: Barlow Semi Condensed 700 for headlines and 600 for "Swipe", Inter for the rest (bundled). One highlight per slide: gold on dark, indigo on light. The text shrinks to the phone floors (headline 64 px, body 36 px, labels 30 px; covers and interiors start larger) and is flagged if it still does not fit. Also flagged: a rule slide without "In practice", two highlights on one rule slide, em-dashes, URLs, highlight not in the headline, more than 4 highlighted words, headline outside 4-8 words, body over 25 words, any number (must come from an approved source), "AI-powered" or "unique" in a headline, carousel length outside 6-9. The "Real Time" logo appears only on the closer.
 
 ## C5. Export: Must, Built
 
@@ -57,4 +58,4 @@ Follows Klik F15: event log, local transcript, Claude edit plan, FFmpeg render t
 |---|---|
 | CQ1 | Should Claude be able to start an export by itself (a write tool in klik-mcp), or should a person always press Export? Today: a person always exports. |
 | CQ2 | Merge the content maker back into Klik later, or keep two apps? The code sits in its own folder (`app/src/content/`) so either is easy. |
-| CQ3 | Role line in the profile chip is TBD in the brand tokens. Current text: "Project Management · Digital Execution · Offshore Wind". |
+| CQ3 | ~~Role line in the profile chip~~ Decided 2026.11.16: website wording per V2 (title + experience line). |

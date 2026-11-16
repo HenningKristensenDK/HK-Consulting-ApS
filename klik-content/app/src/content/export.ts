@@ -36,7 +36,7 @@ export async function exportDeck(fmt: Format, slides: Slide[], profile: Profile,
   const issues: ExportResult["issues"] = [];
   let dir = "";
   for (let i = 0; i < slides.length; i++) {
-    drawSlide(g, fmt, slides[i], i, slides.length, profile, assets).forEach((issue) => issues.push({ slide: i + 1, issue }));
+    drawSlide(g, fmt, slides, i, profile, assets).forEach((issue) => issues.push({ slide: i + 1, issue }));
     const png = await canvasBytes(c, "image/png");
     const name = `${String(i + 1).padStart(2, "0")}.png`;
     dir = await saveExport(folder, name, png);
