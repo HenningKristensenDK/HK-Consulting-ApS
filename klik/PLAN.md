@@ -74,7 +74,7 @@ Et lille, flydende panel (4 ikoner) findes også for dem, der ikke bruger genvej
 - UI i React, som Ranjith kender. Lille installer (få MB) i forhold til Electron.
 - Capture via Windows Graphics Capture API. Rust-craten `windows-capture` (MIT) kan tage billeder og skrive MP4 med cursor. Craten skal tjekkes for aktuel vedligeholdelse før brug.
 - Globale museklik og taster via Win32-hooks (til step-optagelse og ripple).
-- **Gul cursor-ring:** et gennemsigtigt, klik-igennem vindue der følger musen. Det kommer automatisk med i optagelsen. Enkelt og robust.
+- **Indigo cursor-ring:** et gennemsigtigt, klik-igennem vindue der følger musen. Det kommer automatisk med i optagelsen. Enkelt og robust.
 - **Scroll:** send scroll-hjul til vinduet, tag et billede pr. skridt, find overlap ved at sammenligne pixelrækker, sy sammen. Fald tilbage til "scroll selv"-tilstand, hvis automatik fejler.
 - **Data:** alt gemmes lokalt i `Billeder\Klik\`. Ingen cloud. Klientdata forlader aldrig maskinen.
 
