@@ -96,9 +96,9 @@ Priority: **Must** = MVP, **Should** = next release, **Could** = later.
 ### F7. Screen video with a visible cursor: Should, Planned
 
 - One hotkey, select an area or the whole screen, and the same hotkey stops recording.
-- A **yellow ring follows the cursor**, and each click shows a short ripple, so viewers see where you point.
+- An **indigo ring follows the cursor** (2 px `#0D08D2` with a light indigo halo `#E7E6FA`, never gold), and each click shows a short ripple, so viewers see where you point. Decided by Henning 2026.11.16 to match the RTPM brand guide.
 - Output is MP4 that plays in Teams and PowerPoint.
-- **Accept when:** a 2-minute recording has a visible cursor ring and a click ripple at every click, and plays in both apps.
+- **Accept when:** a 2-minute recording has a visible indigo cursor ring and a click ripple at every click, and plays in both apps.
 
 ### F8. Demo video: voice-over and webcam: Should, Planned
 

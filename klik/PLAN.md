@@ -50,7 +50,7 @@ Med:
 1. **Screenshot:** genvejstast → træk område (eller klik = hele skærmen) → editor åbner automatisk → Esc → på udklipsholder + gemt som PNG.
 2. **Mini-editor med 4 værktøjer:** marker (standard), pil med nummer (1, 2, 3 … tæller selv), frihånd, linje. 5 farver. Ét træk pr. markering. Ingen menuer.
 3. **Step-optagelse:** start → hvert museklik giver et screenshot med en rød ring om klikpunktet → stop → én samlet guide (lang PNG + Word/Markdown med nummererede trin).
-4. **Video:** genvejstast → vælg område → optag med gul cursor-ring og klik-ripple → stop → MP4.
+4. **Video:** genvejstast → vælg område → optag med indigo cursor-ring og klik-ripple → stop → MP4.
 5. **Scrolling capture:** genvejstast → klik i vinduet → Klik scroller selv og syr billedet sammen.
 
 Ude af MVP: webcam, GIF, cloud-deling, OCR, Smart Redact, skabeloner, Mac.
@@ -94,7 +94,7 @@ Tidsestimater er grove skøn, ikke tilbud.
 | 1. Screenshot + mini-editor | Område/hele skærm, editor åbner selv, 4 værktøjer, Esc = gem + udklipsholder | 1 uge | 5-opgave-test opgave 1–2. **Status: testet i browser, mangler Windows-test** |
 | 1b. Claude-forbindelse (MCP) | `klik-mcp.exe`: Claude læser seneste capture og en fælles indbakke til overlevering mellem sessioner (SPEC F13, F14) | 3–5 dage | Claude Desktop beskriver seneste screenshot og læser en overlevering uden copy-paste. **Status: bygget og testet med MCP-klient, mangler test i Claude Desktop** |
 | 2. Step-optagelse | Klik-hook, rød ring, samlet guide, Word/Markdown-eksport | 1 uge | 10 klik → guide klar < 2 sek efter stop |
-| 3. Video | MP4 med mikrofon, gul ring, klik-ripple, webcam i cirkel | 1,5–2 uger | MP4 afspilles i Teams og PowerPoint |
+| 3. Video | MP4 med mikrofon, indigo ring, klik-ripple, webcam i cirkel | 1,5–2 uger | MP4 afspilles i Teams og PowerPoint |
 | 4. Scrolling capture | Auto-scroll + sammensyning, manuel fallback | 1–2 uger | Lang side fra Chrome, Outlook og SharePoint uden synlige sømme |
 | 5. Demo-studie | Step-optagelse + tale + webcam → Claude skriver trin-tekst ud fra klik og det, du siger → guide (Word/PowerPoint) og demo-video | 2–3 uger | En 10-trins guide klar til kunden uden manuel tekst |
 | 5b. LinkedIn-opslag fra optagelse | Hændelseslog (`events.json`) under optagelse → lokal tale-til-tekst → Claude laver redigeringsplan (klip, zoom på klik, undertekster, hook) → FFmpeg renderer 4:5, 9:16 og 16:9 med RTPM-skabeloner → karrusel-PDF fra step-billeder. Valgfri AI-stemme (kun Hennings egen, mærket som AI). Senere: genafspil en gemt klik-sti på en ny build (SPEC F15) | 3–4 uger | En 2-minutters rå optagelse bliver til en 4:5-video med undertekster, hook og slutkort efter ét tryk og lette rettelser |
