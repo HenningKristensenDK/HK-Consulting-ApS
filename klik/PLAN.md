@@ -50,7 +50,7 @@ Med:
 1. **Screenshot:** genvejstast → træk område (eller klik = hele skærmen) → editor åbner automatisk → Esc → på udklipsholder + gemt som PNG.
 2. **Mini-editor med 4 værktøjer:** marker (standard), pil med nummer (1, 2, 3 … tæller selv), frihånd, linje. 5 farver. Ét træk pr. markering. Ingen menuer.
 3. **Step-optagelse:** start → hvert museklik giver et screenshot med en rød ring om klikpunktet → stop → én samlet guide (lang PNG + Word/Markdown med nummererede trin).
-4. **Video:** genvejstast → vælg område → optag med gul cursor-ring og klik-ripple → stop → MP4.
+4. **Video:** genvejstast → vælg område → optag med indigo cursor-ring og klik-ripple → stop → MP4.
 5. **Scrolling capture:** genvejstast → klik i vinduet → Klik scroller selv og syr billedet sammen.
 
 Ude af MVP: webcam, GIF, cloud-deling, OCR, Smart Redact, skabeloner, Mac.
@@ -62,7 +62,7 @@ Ude af MVP: webcam, GIF, cloud-deling, OCR, Smart Redact, skabeloner, Mac.
 | Område-screenshot ind i Teams | `PrtScn` → træk → `Ctrl+V` i Teams | 1 tast + 1 træk |
 | Screenshot med trin 1–3 | `PrtScn` → træk → `A` → 3 træk → `Esc` | 1 træk + 3 træk |
 | Step-guide over 10 klik | `Ctrl+Shift+T` → dine 10 klik → `Ctrl+Shift+T` | 0 ekstra klik |
-| Video med gul cursor | `Ctrl+Shift+R` → træk → … → `Ctrl+Shift+R` | 1 træk |
+| Video med indigo cursor | `Ctrl+Shift+R` → træk → … → `Ctrl+Shift+R` | 1 træk |
 | Lang side | `Ctrl+Shift+S` → klik i vinduet | 1 klik |
 
 Et lille, flydende panel (4 ikoner) findes også for dem, der ikke bruger genvejstaster. Panelet kan skjules.
@@ -74,7 +74,7 @@ Et lille, flydende panel (4 ikoner) findes også for dem, der ikke bruger genvej
 - UI i React, som Ranjith kender. Lille installer (få MB) i forhold til Electron.
 - Capture via Windows Graphics Capture API. Rust-craten `windows-capture` (MIT) kan tage billeder og skrive MP4 med cursor. Craten skal tjekkes for aktuel vedligeholdelse før brug.
 - Globale museklik og taster via Win32-hooks (til step-optagelse og ripple).
-- **Gul cursor-ring:** et gennemsigtigt, klik-igennem vindue der følger musen. Det kommer automatisk med i optagelsen. Enkelt og robust.
+- **Indigo cursor-ring:** et gennemsigtigt, klik-igennem vindue der følger musen. Det kommer automatisk med i optagelsen. Enkelt og robust.
 - **Scroll:** send scroll-hjul til vinduet, tag et billede pr. skridt, find overlap ved at sammenligne pixelrækker, sy sammen. Fald tilbage til "scroll selv"-tilstand, hvis automatik fejler.
 - **Data:** alt gemmes lokalt i `Billeder\Klik\`. Ingen cloud. Klientdata forlader aldrig maskinen.
 
@@ -94,12 +94,15 @@ Tidsestimater er grove skøn, ikke tilbud.
 | 1. Screenshot + mini-editor | Område/hele skærm, editor åbner selv, 4 værktøjer, Esc = gem + udklipsholder | 1 uge | 5-opgave-test opgave 1–2. **Status: testet i browser, mangler Windows-test** |
 | 1b. Claude-forbindelse (MCP) | `klik-mcp.exe`: Claude læser seneste capture og en fælles indbakke til overlevering mellem sessioner (SPEC F13, F14) | 3–5 dage | Claude Desktop beskriver seneste screenshot og læser en overlevering uden copy-paste. **Status: bygget og testet med MCP-klient, mangler test i Claude Desktop** |
 | 2. Step-optagelse | Klik-hook, rød ring, samlet guide, Word/Markdown-eksport | 1 uge | 10 klik → guide klar < 2 sek efter stop |
-| 3. Video | MP4 med mikrofon, gul ring, klik-ripple, webcam i cirkel | 1,5–2 uger | MP4 afspilles i Teams og PowerPoint |
+| 3. Video | MP4 med mikrofon, indigo ring, klik-ripple, webcam i cirkel | 1,5–2 uger | MP4 afspilles i Teams og PowerPoint |
 | 4. Scrolling capture | Auto-scroll + sammensyning, manuel fallback | 1–2 uger | Lang side fra Chrome, Outlook og SharePoint uden synlige sømme |
 | 5. Demo-studie | Step-optagelse + tale + webcam → Claude skriver trin-tekst ud fra klik og det, du siger → guide (Word/PowerPoint) og demo-video | 2–3 uger | En 10-trins guide klar til kunden uden manuel tekst |
+| 5b. LinkedIn-opslag fra optagelse | Hændelseslog (`events.json`) under optagelse → lokal tale-til-tekst → Claude laver redigeringsplan (klip, zoom på klik, undertekster, hook) → FFmpeg renderer 4:5, 9:16 og 16:9 med RTPM-skabeloner → karrusel-PDF fra step-billeder. Valgfri AI-stemme (kun Hennings egen, mærket som AI). Senere: genafspil en gemt klik-sti på en ny build (SPEC F15) | 3–4 uger | En 2-minutters rå optagelse bliver til en 4:5-video med undertekster, hook og slutkort efter ét tryk og lette rettelser |
 | 6. Senere | OCR, automatisk blur af e-mails/CPR | – | – |
 
 Rækkefølgen er valgt efter værdi og risiko: step-optagelse er det, gratis værktøjer ikke har; scroll er sidst, fordi den er mest usikker.
+
+Fase 5b bygger på fase 2, 3 og 5 og starter først, når video virker på Windows. Rækkefølge inden for 5b: (1) hændelseslog, (2) automatisk zoom, fjern pauser og 4:5-eksport uden AI, (3) lokal tale-til-tekst og Claudes redigeringsplan, (4) RTPM-skabeloner og karrusel, (5) AI-stemme, (6) genafspilning af klik-sti. Hvert trin er brugbart alene.
 
 ## 7. Pass/fail-test (5 opgaver)
 
