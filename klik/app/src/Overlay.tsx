@@ -1,20 +1,23 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
-import { cancel, finish, inTauri, loadShot, onCaptured, showOverlay, type Shot } from "./bridge";
-import { exportPng, normRect, render, type Pt, type Rect, type Shape, type Tool } from "./draw";
+import { close, hotkeyLabel, inTauri, loadShot, onCaptured, saveCopy, showOverlay, type Shot } from "./bridge";
+import { CALLOUT, calloutLayout, exportRgba, normRect, render, type Pt, type Rect, type Shape, type Tool } from "./draw";
 import { Icon } from "./icons";
 
 type Mode = "idle" | "select" | "edit";
 
-const COLORS = ["#EF4444", "#FFE14D", "#22C55E", "#3B82F6", "#111827"];
+// RTPM brand: RAG red/green, Primary Indigo, Accent Yellow (highlighter), Ink.
+const COLORS = ["#C0392B", "#0d08d2", "#27AE60", "#ffcc00", "#15162b"];
 const DEFAULT_COLORS: Record<Tool, string> = {
-  highlight: "#FFE14D",
-  pen: "#EF4444",
-  line: "#EF4444",
-  arrow: "#EF4444",
+  highlight: "#ffcc00",
+  pen: "#C0392B",
+  line: "#C0392B",
+  arrow: "#0d08d2",
+  callout: "#0d08d2",
 };
 const TOOLS: { id: Tool; key: string; label: string }[] = [
   { id: "highlight", key: "M", label: "Marker" },
   { id: "arrow", key: "A", label: "Pil med nummer" },
+  { id: "callout", key: "K", label: "Pil med kommentar" },
   { id: "pen", key: "P", label: "Frihånd" },
   { id: "line", key: "L", label: "Linje" },
 ];
@@ -32,8 +35,16 @@ export function Overlay() {
     colors: { ...DEFAULT_COLORS },
     busy: false,
     toast: "",
+    /** Index of the comment being typed, or null. */
+    editing: null as number | null,
+    /** Clipboard state shown in the toolbar. */
+    status: "" as "" | "saving" | "saved" | "error",
   });
+  const saveTimer = useRef<number | undefined>(undefined);
+  const saveSeq = useRef(0);
+  const saving = useRef<Promise<unknown>>(Promise.resolve());
   const [, rerender] = useReducer((x: number) => x + 1, 0);
+  const hotkey = useRef<string | null>(null);
   const frame = useRef(0);
 
   /** Image pixels per CSS pixel. */
@@ -49,7 +60,7 @@ export function Overlay() {
       const s = st.current;
       if (!c || !shot.current) return;
       const shapes = s.draft ? [...s.shapes, s.draft] : s.shapes;
-      render(c.getContext("2d")!, shot.current.bitmap, s.sel, shapes, k());
+      render(c.getContext("2d")!, shot.current.bitmap, s.sel, shapes, k(), s.editing);
     });
   }, []);
 
@@ -58,12 +69,13 @@ export function Overlay() {
     () =>
       onCaptured(async () => {
         const next = await loadShot();
+        hotkey.current = await hotkeyLabel();
         shot.current?.bitmap.close();
         shot.current = next;
         const c = canvasRef.current!;
         c.width = next.w;
         c.height = next.h;
-        Object.assign(st.current, { mode: "select", sel: null, shapes: [], draft: null, start: null, busy: false, toast: "" });
+        Object.assign(st.current, { mode: "select", sel: null, shapes: [], draft: null, start: null, busy: false, toast: "", status: "", editing: null });
         render(c.getContext("2d")!, next.bitmap, null, [], k());
         rerender();
         await showOverlay();
@@ -77,22 +89,75 @@ export function Overlay() {
     return { x: (e.clientX - r.left) * kk, y: (e.clientY - r.top) * kk };
   };
 
+  /** Save + copy what is on screen now. Only the newest save counts. */
+  const saveNow = useCallback(async () => {
+    window.clearTimeout(saveTimer.current);
+    saveTimer.current = undefined;
+    const s = st.current;
+    if (!s.sel || !shot.current) return;
+    const my = ++saveSeq.current;
+    const png = exportRgba(shot.current.bitmap, s.sel, s.shapes, k());
+    s.status = "saving";
+    rerender();
+    saving.current = saving.current
+      .then(() => saveCopy(png))
+      .then(
+        () => my === saveSeq.current && (s.status = "saved"),
+        () => (s.status = "error"),
+      )
+      .then(rerender);
+    await saving.current;
+  }, []);
+
+  /** Debounced: lets quick strokes in a row cost only one save. */
+  const scheduleSave = useCallback(
+    (delay = 150) => {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = window.setTimeout(saveNow, delay);
+    },
+    [saveNow],
+  );
+
+  /** Finish typing a comment. An empty comment is removed. */
+  const commitText = useCallback(() => {
+    const s = st.current;
+    if (s.editing === null) return;
+    const sh = s.shapes[s.editing];
+    if (sh?.kind === "callout") {
+      const text = sh.text.trim();
+      s.shapes = text
+        ? s.shapes.map((x, i) => (i === s.editing ? { ...sh, text } : x))
+        : s.shapes.filter((_, i) => i !== s.editing);
+    }
+    s.editing = null;
+    paint();
+    rerender();
+    scheduleSave();
+  }, [paint, scheduleSave]);
+
+  /** Esc / Enter / Færdig: everything is already copied; make sure the last change is too, then close. */
   const done = useCallback(async () => {
     const s = st.current;
     if (s.busy || !s.sel || !shot.current) return;
+    if (s.editing !== null) commitText();
     s.busy = true;
-    const png = await exportPng(shot.current.bitmap, s.sel, s.shapes, k());
+    if (saveTimer.current !== undefined) await saveNow();
+    await saving.current;
     s.mode = "idle";
     s.toast = "Gemt og kopieret";
     rerender();
-    await finish(png);
+    await close(false);
     s.busy = false;
-  }, []);
+  }, [saveNow, commitText]);
 
+  /** Kassér: close and delete the file saved for this capture. */
   const abort = useCallback(async () => {
+    window.clearTimeout(saveTimer.current);
+    saveSeq.current++;
+    await saving.current;
     st.current.mode = "idle";
     rerender();
-    await cancel();
+    await close(true);
   }, []);
 
   const backToSelect = () => {
@@ -111,9 +176,15 @@ export function Overlay() {
       s.start = p;
       s.sel = null;
     } else if (s.mode === "edit") {
+      // A click while typing a comment just finishes the comment.
+      if (s.editing !== null) {
+        commitText();
+        return;
+      }
       const color = s.colors[s.tool];
       if (s.tool === "highlight" || s.tool === "pen") s.draft = { kind: s.tool, color, pts: [p] };
       else if (s.tool === "line") s.draft = { kind: "line", color, a: p, b: p };
+      else if (s.tool === "callout") s.draft = { kind: "callout", color, a: p, b: p, text: "" };
       else {
         const n = s.shapes.filter((x) => x.kind === "arrow").length + 1;
         s.draft = { kind: "arrow", color, a: p, b: p, n };
@@ -135,7 +206,7 @@ export function Overlay() {
         // Shift = straight stroke
         if (e.shiftKey) d.pts = [d.pts[0], p];
         else d.pts.push(p);
-      } else if (d.kind === "line" || d.kind === "arrow") d.b = p;
+      } else if (d.kind === "line" || d.kind === "arrow" || d.kind === "callout") d.b = p;
       paint();
     }
   };
@@ -149,8 +220,11 @@ export function Overlay() {
       s.sel = r.w < 6 * k() || r.h < 6 * k() ? { x: 0, y: 0, w: shot.current!.w, h: shot.current!.h } : r;
       s.start = null;
       s.mode = "edit";
+      scheduleSave(0); // the area is on the clipboard as soon as it is framed
     } else if (s.mode === "edit" && s.draft) {
       s.shapes = [...s.shapes, s.draft];
+      if (s.draft.kind === "callout") s.editing = s.shapes.length - 1; // type now, save on commit
+      else scheduleSave();
       s.draft = null;
     }
     paint();
@@ -169,12 +243,13 @@ export function Overlay() {
     st.current.shapes = st.current.shapes.slice(0, -1);
     paint();
     rerender();
+    scheduleSave();
   };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const s = st.current;
-      if (s.mode === "idle") return;
+      if (s.mode === "idle" || s.editing !== null) return; // the comment field handles its own keys
       const key = e.key.toLowerCase();
       if (key === "escape") {
         e.preventDefault();
@@ -192,6 +267,15 @@ export function Overlay() {
     return () => window.removeEventListener("keydown", onKey);
   }, [done, abort]);
 
+  const setText = (text: string) => {
+    const s = st.current;
+    const sh = s.editing !== null ? s.shapes[s.editing] : undefined;
+    if (sh?.kind !== "callout") return;
+    s.shapes = s.shapes.map((x, i) => (i === s.editing ? { ...sh, text } : x));
+    paint();
+    rerender();
+  };
+
   const s = st.current;
   const kk = k();
   const selCss = s.sel && { x: s.sel.x / kk, y: s.sel.y / kk, w: s.sel.w / kk, h: s.sel.h / kk };
@@ -202,7 +286,7 @@ export function Overlay() {
     let top = selCss.y + selCss.h + 12;
     if (top + H > window.innerHeight - 8) top = selCss.y - H - 12;
     if (top < 8) top = selCss.y + selCss.h - H - 12;
-    const center = Math.min(Math.max(selCss.x + selCss.w / 2, 260), window.innerWidth - 260);
+    const center = Math.min(Math.max(selCss.x + selCss.w / 2, 300), window.innerWidth - 300);
     bar = { top, left: center };
   }
 
@@ -219,6 +303,11 @@ export function Overlay() {
       {s.mode === "select" && !s.start && (
         <div className="hint">
           <b>Træk</b> for at markere &nbsp;·&nbsp; <b>Klik</b> = hele skærmen &nbsp;·&nbsp; <b>Esc</b> = annullér
+          {hotkey.current && (
+            <div className="hint-key">
+              Næste gang: tryk <kbd>{hotkey.current}</kbd>
+            </div>
+          )}
         </div>
       )}
 
@@ -227,6 +316,42 @@ export function Overlay() {
           {Math.round(s.sel!.w)} × {Math.round(s.sel!.h)}
         </div>
       )}
+
+      {s.mode === "edit" &&
+        s.editing !== null &&
+        (() => {
+          const sh = s.shapes[s.editing];
+          if (sh?.kind !== "callout") return null;
+          const { box } = calloutLayout(sh.text || "Skriv kommentar", sh.a, kk);
+          return (
+            <textarea
+              className="comment"
+              autoFocus
+              placeholder="Skriv kommentar"
+              value={sh.text}
+              style={{
+                left: box.x / kk,
+                top: box.y / kk,
+                width: box.w / kk + 2,
+                height: box.h / kk,
+                borderColor: sh.color,
+                fontSize: CALLOUT.font,
+                lineHeight: `${CALLOUT.lineH}px`,
+                padding: `${CALLOUT.padY - CALLOUT.border}px ${CALLOUT.padX - CALLOUT.border}px`,
+              }}
+              onChange={(e) => setText(e.target.value)}
+              onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                // Enter or Esc finishes the comment; Shift+Enter is a new line.
+                if ((e.key === "Enter" && !e.shiftKey) || e.key === "Escape") {
+                  e.preventDefault();
+                  commitText();
+                }
+              }}
+            />
+          );
+        })()}
 
       {s.mode === "edit" && bar && (
         <div className="bar" style={bar} onPointerDown={(e) => e.stopPropagation()}>
@@ -254,11 +379,20 @@ export function Overlay() {
           <button className="tool" title="Fortryd  (Ctrl+Z)" disabled={!s.shapes.length} onClick={undo}>
             <Icon name="undo" />
           </button>
-          <button className="tool" title="Kassér" onClick={abort}>
+          <button className="tool" title="Kassér: slet billedet og luk" onClick={abort}>
             <Icon name="close" />
           </button>
-          <button className="done" title="Gem og kopiér  (Esc)" onClick={done}>
-            <Icon name="check" /> Kopiér <kbd>Esc</kbd>
+          <span className={`status ${s.status}`} aria-live="polite">
+            {s.status === "saved" && (
+              <>
+                <Icon name="check" /> Kopieret
+              </>
+            )}
+            {s.status === "saving" && "Kopierer…"}
+            {s.status === "error" && "Kunne ikke kopiere"}
+          </span>
+          <button className="done" title="Luk. Billedet er allerede gemt og kopieret  (Esc)" onClick={done}>
+            Færdig <kbd>Esc</kbd>
           </button>
         </div>
       )}

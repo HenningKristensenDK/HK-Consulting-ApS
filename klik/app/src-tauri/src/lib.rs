@@ -1,11 +1,12 @@
 //! Klik: capture core.
 //!
 //! Flow: hotkey -> capture the monitor under the cursor -> the overlay window
-//! covers that monitor and shows the frozen image -> user selects and draws ->
-//! Esc sends the finished PNG back here -> saved to Pictures\Klik and put on
-//! the clipboard.
+//! covers that monitor and shows the frozen image -> the user selects an area,
+//! which is saved to Pictures\Klik and put on the clipboard at once -> every
+//! marking updates both -> Esc closes.
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
 use tauri::ipc::{InvokeBody, Request, Response};
@@ -19,6 +20,29 @@ const OVERLAY: &str = "overlay";
 /// The last captured monitor image: (width, height, RGBA bytes).
 #[derive(Default)]
 struct Shot(Mutex<Option<(u32, u32, Vec<u8>)>>);
+
+/// The file saved for the capture on screen, overwritten on every change.
+#[derive(Default)]
+struct CurrentFile(Mutex<Option<PathBuf>>);
+
+/// The hotkey Klik got, shown in the tray menu and the overlay hint.
+#[derive(Default)]
+struct Hotkey(Mutex<Option<String>>);
+
+/// Opening Klik takes a screenshot. The first launch has to wait until the
+/// overlay page is loaded, so the request is parked here until `frontend_ready`.
+static CAPTURE_ON_READY: AtomicBool = AtomicBool::new(false);
+
+/// Hotkeys to try, in order. The first one no other program owns wins.
+/// PrtScn is left alone on purpose: Snagit and Windows' Snipping Tool use it.
+fn hotkey_candidates() -> Vec<(Shortcut, &'static str)> {
+    vec![
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyK), "Ctrl+Alt+K"),
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyK), "Ctrl+Shift+K"),
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyS), "Ctrl+Alt+S"),
+        (Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyX), "Ctrl+Shift+X"),
+    ]
+}
 
 fn overlay(app: &AppHandle) -> Option<WebviewWindow> {
     app.get_webview_window(OVERLAY)
@@ -41,6 +65,7 @@ fn capture(app: &AppHandle) -> Result<(), String> {
     let (x, y) = (mon.x().map_err(err)?, mon.y().map_err(err)?);
 
     *app.state::<Shot>().0.lock().unwrap() = Some((w, h, img.into_raw()));
+    app.state::<CurrentFile>().0.lock().unwrap().take();
 
     win.set_position(PhysicalPosition::new(x, y)).map_err(err)?;
     win.set_size(PhysicalSize::new(w, h)).map_err(err)?;
@@ -71,18 +96,24 @@ fn get_shot(shot: tauri::State<'_, Shot>) -> Result<Response, String> {
     Ok(Response::new(out))
 }
 
+/// Called by the overlay page once it listens for captures.
+#[tauri::command]
+fn frontend_ready(app: AppHandle) {
+    if CAPTURE_ON_READY.swap(false, Ordering::SeqCst) {
+        capture_async(&app);
+    }
+}
+
+#[tauri::command]
+fn hotkey_label(hotkey: tauri::State<'_, Hotkey>) -> Option<String> {
+    hotkey.0.lock().unwrap().clone()
+}
+
 #[tauri::command]
 fn show_overlay(window: WebviewWindow) -> Result<(), String> {
     window.show().map_err(err)?;
     window.set_always_on_top(true).map_err(err)?;
     window.set_focus().map_err(err)?;
-    Ok(())
-}
-
-#[tauri::command]
-fn cancel(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
-    window.hide().map_err(err)?;
-    app.state::<Shot>().0.lock().unwrap().take();
     Ok(())
 }
 
@@ -92,35 +123,82 @@ fn output_dir(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir)
 }
 
-/// Receives the finished PNG (raw body), saves it and copies it to the clipboard.
-/// Returns the saved file path.
-#[tauri::command]
-fn finish(app: AppHandle, window: WebviewWindow, request: Request<'_>) -> Result<String, String> {
-    window.hide().map_err(err)?;
-    app.state::<Shot>().0.lock().unwrap().take();
-
-    let InvokeBody::Raw(png) = request.body() else {
-        return Err("expected PNG bytes".into());
+/// Copies the current image to the clipboard, then saves it as PNG.
+/// Body: width, height (u32 LE) + RGBA pixels. Called as soon as an area is
+/// selected and again after every marking, so the clipboard always holds what
+/// you see. One capture keeps one file, overwritten on each change.
+/// Runs off the main thread so the overlay stays responsive.
+#[tauri::command(async)]
+fn save_copy(app: AppHandle, request: Request<'_>) -> Result<String, String> {
+    let InvokeBody::Raw(body) = request.body() else {
+        return Err("expected image bytes".into());
     };
+    if body.len() < 8 {
+        return Err("image too short".into());
+    }
+    let w = u32::from_le_bytes(body[0..4].try_into().unwrap());
+    let h = u32::from_le_bytes(body[4..8].try_into().unwrap());
+    let px = &body[8..];
+    if px.len() != (w as usize) * (h as usize) * 4 {
+        return Err("image size does not match".into());
+    }
 
-    let name = chrono::Local::now().format("Klik %Y-%m-%d %H%M%S.png").to_string();
-    let path = output_dir(&app)?.join(name);
-    std::fs::write(&path, png).map_err(err)?;
+    let state = app.state::<CurrentFile>();
+    let mut current = state.0.lock().unwrap(); // also serialises saves
 
-    let rgba = image::load_from_memory(png).map_err(err)?.to_rgba8();
+    // Clipboard first: that is what the user pastes next.
     let mut cb = arboard::Clipboard::new().map_err(err)?;
     cb.set_image(arboard::ImageData {
-        width: rgba.width() as usize,
-        height: rgba.height() as usize,
-        bytes: rgba.into_raw().into(),
+        width: w as usize,
+        height: h as usize,
+        bytes: std::borrow::Cow::Borrowed(px),
     })
     .map_err(err)?;
 
+    let path = match current.as_ref() {
+        Some(p) => p.clone(),
+        None => {
+            let name = chrono::Local::now().format("Klik %Y-%m-%d %H%M%S.png").to_string();
+            let p = output_dir(&app)?.join(name);
+            *current = Some(p.clone());
+            p
+        }
+    };
+    let file = std::io::BufWriter::new(std::fs::File::create(&path).map_err(err)?);
+    let enc = image::codecs::png::PngEncoder::new_with_quality(
+        file,
+        image::codecs::png::CompressionType::Fast,
+        image::codecs::png::FilterType::Adaptive,
+    );
+    image::ImageEncoder::write_image(enc, px, w, h, image::ExtendedColorType::Rgba8).map_err(err)?;
     Ok(path.to_string_lossy().into_owned())
 }
 
-fn open_folder(app: &AppHandle) {
-    if let Ok(dir) = output_dir(app) {
+/// Hides the overlay. `discard` deletes the file saved for this capture.
+#[tauri::command]
+fn close(app: AppHandle, window: WebviewWindow, discard: bool) -> Result<(), String> {
+    window.hide().map_err(err)?;
+    app.state::<Shot>().0.lock().unwrap().take();
+    if let Some(p) = app.state::<CurrentFile>().0.lock().unwrap().take() {
+        if discard {
+            let _ = std::fs::remove_file(p);
+        }
+    }
+    Ok(())
+}
+
+/// The handoff inbox shared with Claude through klik-mcp (same default path).
+fn inbox_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = match std::env::var("KLIK_INBOX_DIR") {
+        Ok(v) if !v.trim().is_empty() => PathBuf::from(v.trim()),
+        _ => app.path().document_dir().map_err(err)?.join("Klik").join("Inbox"),
+    };
+    std::fs::create_dir_all(&dir).map_err(err)?;
+    Ok(dir)
+}
+
+fn open_dir(dir: Result<PathBuf, String>) {
+    if let Ok(dir) = dir {
         #[cfg(windows)]
         let _ = std::process::Command::new("explorer").arg(dir).spawn();
         #[cfg(not(windows))]
@@ -128,21 +206,36 @@ fn open_folder(app: &AppHandle) {
     }
 }
 
-fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
-    let shot = MenuItem::with_id(app, "shot", "Tag screenshot   (PrtScn)", true, None::<&str>)?;
-    let folder = MenuItem::with_id(app, "folder", "Åbn mappe", true, None::<&str>)?;
+fn setup_tray(app: &AppHandle, hotkey: Option<&str>) -> tauri::Result<()> {
+    let shot_label = match hotkey {
+        Some(k) => format!("Tag screenshot   ({k})"),
+        None => "Tag screenshot".to_string(),
+    };
+    let key_label = match hotkey {
+        Some(k) => format!("Genvejstast: {k}"),
+        None => "Ingen ledig genvejstast. Klik på ikonet i stedet".to_string(),
+    };
+    let shot = MenuItem::with_id(app, "shot", shot_label, true, None::<&str>)?;
+    let key = MenuItem::with_id(app, "key", key_label, false, None::<&str>)?;
+    let folder = MenuItem::with_id(app, "folder", "Åbn screenshots", true, None::<&str>)?;
+    let inbox = MenuItem::with_id(app, "inbox", "Åbn indbakke (Claude)", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Afslut Klik", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&shot, &folder, &sep, &quit])?;
+    let menu = Menu::with_items(app, &[&shot, &key, &folder, &inbox, &sep, &quit])?;
+    let tooltip = match hotkey {
+        Some(k) => format!("Klik  -  klik her eller tryk {k}"),
+        None => "Klik  -  klik her for screenshot".to_string(),
+    };
 
     TrayIconBuilder::with_id("klik")
         .icon(app.default_window_icon().cloned().expect("app icon"))
-        .tooltip("Klik  -  PrtScn eller Ctrl+Shift+X")
+        .tooltip(tooltip)
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, e| match e.id.as_ref() {
             "shot" => capture_async(app),
-            "folder" => open_folder(app),
+            "folder" => open_dir(output_dir(app)),
+            "inbox" => open_dir(inbox_dir(app)),
             "quit" => app.exit(0),
             _ => {}
         })
@@ -162,8 +255,10 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let print_screen = Shortcut::new(None, Code::PrintScreen);
-    let fallback = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyX);
+    // Started at login (later: autostart) should stay quiet. Started by the
+    // user from the Start menu or a shortcut should take a screenshot.
+    let background = std::env::args().any(|a| a == "--background");
+    CAPTURE_ON_READY.store(!background, Ordering::SeqCst);
 
     tauri::Builder::default()
         // A second launch just triggers a capture in the running instance.
@@ -180,17 +275,31 @@ pub fn run() {
                 .build(),
         )
         .manage(Shot::default())
-        .invoke_handler(tauri::generate_handler![get_shot, show_overlay, cancel, finish])
+        .manage(Hotkey::default())
+        .manage(CurrentFile::default())
+        .invoke_handler(tauri::generate_handler![
+            get_shot,
+            show_overlay,
+            save_copy,
+            close,
+            frontend_ready,
+            hotkey_label
+        ])
         .setup(move |app| {
             use tauri_plugin_global_shortcut::GlobalShortcutExt;
-            // Register each key on its own: if Windows already owns PrtScn
-            // (Settings > Accessibility > Keyboard), Ctrl+Shift+X still works.
-            for s in [print_screen, fallback] {
-                if let Err(e) = app.global_shortcut().register(s) {
-                    eprintln!("klik: could not register {s:?}: {e}");
+            // Take the first hotkey that no other program (e.g. Snagit) owns.
+            let mut got = None;
+            for (s, label) in hotkey_candidates() {
+                match app.global_shortcut().register(s) {
+                    Ok(()) => {
+                        got = Some(label);
+                        break;
+                    }
+                    Err(e) => eprintln!("klik: {label} is taken: {e}"),
                 }
             }
-            setup_tray(app.handle())?;
+            *app.state::<Hotkey>().0.lock().unwrap() = got.map(String::from);
+            setup_tray(app.handle(), got)?;
             Ok(())
         })
         .on_window_event(|window, event| {

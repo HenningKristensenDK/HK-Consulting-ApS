@@ -92,6 +92,7 @@ Tidsestimater er grove skøn, ikke tilbud.
 |---|---|---|---|
 | 0. Spike | Tauri-app, genvejstast, capture af skærmen under musen, ikonbakke | 2–3 dage | Kører på din PC. **Status: kode skrevet** |
 | 1. Screenshot + mini-editor | Område/hele skærm, editor åbner selv, 4 værktøjer, Esc = gem + udklipsholder | 1 uge | 5-opgave-test opgave 1–2. **Status: testet i browser, mangler Windows-test** |
+| 1b. Claude-forbindelse (MCP) | `klik-mcp.exe`: Claude læser seneste capture og en fælles indbakke til overlevering mellem sessioner (SPEC F13, F14) | 3–5 dage | Claude Desktop beskriver seneste screenshot og læser en overlevering uden copy-paste. **Status: bygget og testet med MCP-klient, mangler test i Claude Desktop** |
 | 2. Step-optagelse | Klik-hook, rød ring, samlet guide, Word/Markdown-eksport | 1 uge | 10 klik → guide klar < 2 sek efter stop |
 | 3. Video | MP4 med mikrofon, gul ring, klik-ripple, webcam i cirkel | 1,5–2 uger | MP4 afspilles i Teams og PowerPoint |
 | 4. Scrolling capture | Auto-scroll + sammensyning, manuel fallback | 1–2 uger | Lang side fra Chrome, Outlook og SharePoint uden synlige sømme |

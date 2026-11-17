@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Klik",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "identifier": "dk.rtpm.klik",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -24,11 +24,15 @@
         "height": 600
       }
     ],
-    "security": { "csp": null }
+    "security": {
+      "csp": null
+    }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,7 +40,16 @@
       "icons/icon.ico"
     ],
     "windows": {
-      "nsis": { "installMode": "currentUser" }
-    }
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "installer-hooks.nsh"
+      }
+    },
+    "externalBin": [
+      "binaries/klik-mcp"
+    ],
+    "publisher": "Real Time Project Management",
+    "shortDescription": "Klik: enkel screenshot med markeringer"
   }
 }
